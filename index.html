@@ -1,0 +1,483 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0f1115"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon-192.png"><title>けもケット 個人カタログ</title><style>
+:root{
+  --bg:#0f1115; --bg2:#0b0d12; --panel:#171a21; --panel2:#1d2230; --panel3:#10151d;
+  --text:#f5f7fb; --muted:#9fa8bb; --line:#2b3240; --accent:#8bd3ff; --accent2:#3ca9ff;
+  --danger:#ff6b7a; --ok:#73d6a2; --shadow:0 10px 28px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:system-ui,-apple-system,'Noto Sans JP',sans-serif;background:linear-gradient(180deg,var(--bg2),var(--bg));color:var(--text)}
+a{color:inherit}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:20;background:rgba(11,13,18,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:12px env(safe-area-inset-right) 12px env(safe-area-inset-left)}
+.header-row{display:flex;gap:8px;align-items:center;max-width:980px;margin:auto}
+h1{font-size:18px;margin:0;flex:1;font-weight:800;letter-spacing:.02em}
+header .iconbtn{width:44px;height:44px;padding:0;display:grid;place-items:center;border-radius:14px}
+main{padding:12px env(safe-area-inset-right) calc(30px + env(safe-area-inset-bottom)) env(safe-area-inset-left);max-width:980px;margin:auto}
+.page{display:block}.page.hidden{display:none}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.toolbar .wide{grid-column:1/-1}
+input,select,textarea{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px}
+textarea{min-height:88px;resize:vertical}
+button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:11px 12px;box-shadow:var(--shadow)}
+button.primary{background:#163248;border-color:#305d7b}
+button.good{background:#173327;border-color:#2f6b50}
+button.warn{background:#48281d;border-color:#7b5631}
+.stats{display:flex;gap:8px;overflow:auto;padding:4px 0 10px;scrollbar-width:none}.stats::-webkit-scrollbar{display:none}
+.stat{white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 11px;color:var(--muted);font-size:13px}
+.card{background:linear-gradient(180deg,#181c25,#141821);border:1px solid var(--line);border-radius:18px;padding:12px;margin:10px 0;box-shadow:var(--shadow)}
+.card-top{display:flex;gap:10px;align-items:flex-start}
+.space{font-weight:900;min-width:58px;font-size:15px;background:#0f1620;border:1px solid #253041;border-radius:12px;padding:8px;text-align:center}
+.name{font-weight:900;font-size:17px;flex:1;line-height:1.3}
+.rep{color:var(--muted);font-size:12px;margin-top:3px}
+.official-links{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:11px 0 8px}
+.link-slot{display:flex;min-height:58px;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;border:1px solid #273140;background:#101721;border-radius:13px;box-shadow:none}
+.link-label{font-size:11px;color:#9aa7b8;font-weight:700;letter-spacing:.03em}
+.link-mark{display:grid;place-items:center;height:24px}
+.link-mark svg{width:24px;height:24px;display:block}
+.link-slot.off{color:#6c7480;background:#151920;border-color:#282f39}
+.link-web{color:#ff8c32}.link-pixiv{color:#2aa9ff}.link-tw{color:#35aee2}
+.sync-meta{margin:-2px 0 10px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:#121721;color:var(--muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.sync-meta.ok{color:#bce9cd;border-color:#285640;background:#10241c}.sync-meta.working{color:#c7e9ff;border-color:#28506b;background:#10202c}.sync-meta.error{color:#ffd0d5;border-color:#673039;background:#2b1519}.sync-meta a{color:var(--accent)}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{padding:8px 11px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.08);box-shadow:none}
+.chip.active{outline:2px solid #fff;outline-offset:1px}
+.c-red{background:#6a2028}.c-orange{background:#6a421e}.c-yellow{background:#675f1d}.c-green{background:#1d5a39}.c-blue{background:#224e6d}.c-gray{background:#3b404a}
+.p-S{background:#68304e}.p-A{background:#5f3c25}.p-B{background:#3f5124}.p-C{background:#254657}.p-none{background:#343943}
+.tag{background:#252b36}.tag.active{background:#36506e}.tag.soft{background:#202833;color:#c6d7e9}
+.fields{display:grid;grid-template-columns:1fr 110px;gap:7px}
+.fields textarea{grid-column:1/-1}
+.small{font-size:12px;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.panel{background:linear-gradient(180deg,#181c25,#141821);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+.listless{list-style:none;padding:0;margin:0}
+.tag-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.tag-item:last-child{border-bottom:0}
+.tag-actions{display:flex;gap:6px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.note{font-size:13px;line-height:1.6;color:#cfd5df}
+.footer-help{font-size:12px;color:var(--muted);margin-top:10px}
+.sticky-bottom{position:sticky;bottom:10px}
+.eventbar{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px;align-items:center}
+.eventbar select{font-weight:800}
+.event-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+.event-item:last-child{border-bottom:0}
+.event-meta{font-size:12px;color:var(--muted);margin-top:3px;word-break:break-all}
+@media(min-width:760px){.toolbar{grid-template-columns:2fr 1fr 1fr 1fr}.toolbar.tight{grid-template-columns:repeat(4,1fr)} .toolbar .wide{grid-column:auto} .fields{grid-template-columns:1fr 120px}}
+</style></head><body>
+<header>
+  <div class="header-row">
+    <h1>けもケット 個人カタログ</h1>
+    <button id="manageTagsBtn" class="iconbtn" title="分類タグ管理">🏷️</button>
+  </div>
+</header>
+<main>
+  <section id="catalogPage" class="page">
+    <div class="eventbar">
+      <select id="eventSelect" aria-label="イベント選択"></select>
+      <button id="manageEventsBtn">イベント管理</button>
+    </div>
+    <div class="toolbar">
+      <input id="q" class="wide" type="search" placeholder="サークル名・配置・代表者・メモを検索">
+      <select id="priorityFilter">
+        <option value="all">優先度：全部</option><option value="S">S</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="none">未設定</option>
+      </select>
+      <select id="colorFilter">
+        <option value="all">色：全部</option><option value="red">赤</option><option value="orange">橙</option><option value="yellow">黄</option><option value="green">緑</option><option value="blue">青</option><option value="gray">灰</option>
+      </select>
+      <select id="tagFilter"></select>
+      <select id="sort">
+        <option value="space">配置順</option><option value="priority">優先度順</option><option value="name">サークル名順</option><option value="unvisited">未訪問優先</option>
+      </select>
+    </div>
+    <div class="toolbar tight">
+      <button class="primary" id="syncBtn">公式リスト同期</button>
+      <button id="exportBtn">バックアップ保存</button>
+      <label><button type="button" onclick="this.parentElement.querySelector('input').click()">バックアップ読込</button><input id="importFile" type="file" accept="application/json" hidden></label>
+      <button class="warn" id="clearBtn">判定を全初期化</button>
+    </div>
+    <div id="syncMeta" class="sync-meta"></div>
+    <div class="stats" id="stats"></div>
+    <section id="list"></section>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。</div>
+  </section>
+
+  <section id="eventPage" class="page hidden">
+    <div class="panel">
+      <div class="kv"><h2 style="margin:0">イベント管理</h2><button id="backFromEventsBtn">← 戻る</button></div>
+      <p class="note">今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・優先度・メモ・訪問済みを別々に保存します。</p>
+      <div class="toolbar" style="margin-top:10px">
+        <input id="newEventName" placeholder="イベント名（例：けもケット18）">
+        <input id="newEventUrl" class="wide" value="https://skypalette.jp/kemoket/list.html" placeholder="公式サークルリストURL">
+        <button class="good" id="addEventBtn">イベント追加</button>
+      </div>
+      <div id="eventList"></div>
+    </div>
+  </section>
+
+  <section id="tagPage" class="page hidden">
+    <div class="panel">
+      <div class="kv"><h2 style="margin:0">分類タグ管理</h2><button id="backToCatalogBtn">← 戻る</button></div>
+      <p class="note">ここで分類タグの追加・名前変更・削除ができます。変更は全サークルのタグ付けにも反映されます。</p>
+      <div class="toolbar" style="margin-top:10px">
+        <input id="newTagName" class="wide" placeholder="新しいタグ名（例：完全ケモノ / R18 / 本命候補）">
+        <button class="good" id="addTagBtn">タグ追加</button>
+      </div>
+      <ul class="listless" id="tagList"></ul>
+      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+      <div class="note">
+        <b>分類の考え方（いったんの方針）</b><br>
+        公式側に検索タグが見当たらないので、まずは手動タグ付け前提にしてあります。次段階では、サークル名・web・pixiv・twのリンク先をたどって、プロフィール文や頒布告知から「ケモノ / 獣化 / transfur / 人間寄りNG」などの候補を半自動で下書きする方向がよさそうです。
+      </div>
+    </div>
+  </section>
+</main>
+<script>const VERSION='2026-08-20-6';
+const LS_EVENTS='kemoket_events_v1';
+const LS_CURRENT_EVENT='kemoket_current_event_v1';
+const LS_TAGS='kemoket_shared_tags_v1';
+const DEFAULT_TAGS=['ケモノ','獣化','transfur','要調査','人間寄りNG'];
+const DEFAULT_EVENTS=[{id:'kemoket17',name:'けもケット17',officialUrl:'https://skypalette.jp/kemoket/list.html'}];
+const stateTemplate=()=>({color:'gray',priority:'',tags:[],item:'',budget:'',memo:'',visited:false,updatedAt:0});
+let circles=[];
+let prefs={q:'',priority:'all',color:'all',tag:'all',sort:'space'};
+let tags=[];
+let syncInfo=null;
+let events=[];
+let currentEventId='kemoket17';
+function eventKey(kind){return `kemoket_event_${currentEventId}_${kind}_v1`;}
+function currentEvent(){return events.find(e=>e.id===currentEventId)||events[0];}
+function slugifyEvent(name){const base=String(name||'event').toLowerCase().replace(/けもケット/g,'kemoket').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');return base||('event-'+Date.now());}
+function saveEvents(){localStorage.setItem(LS_EVENTS,JSON.stringify(events));localStorage.setItem(LS_CURRENT_EVENT,currentEventId);}
+function save(){localStorage.setItem(eventKey('circles'), JSON.stringify(circles));}
+function savePrefs(){localStorage.setItem(eventKey('prefs'), JSON.stringify(prefs));}
+function saveTags(){localStorage.setItem(LS_TAGS, JSON.stringify(tags));}
+function saveSync(){localStorage.setItem(eventKey('sync'), JSON.stringify(syncInfo));}
+function migrateK17(){
+  if(currentEventId!=='kemoket17')return;
+  const maps=[['kemoket17_circles_v2','circles'],['kemoket17_prefs_v2','prefs'],['kemoket17_sync_v1','sync']];
+  for(const [oldKey,kind] of maps){const nk=eventKey(kind);if(!localStorage.getItem(nk)&&localStorage.getItem(oldKey))localStorage.setItem(nk,localStorage.getItem(oldKey));}
+  if(!localStorage.getItem(LS_TAGS)&&localStorage.getItem('kemoket17_tags_v1'))localStorage.setItem(LS_TAGS,localStorage.getItem('kemoket17_tags_v1'));
+}
+function load(){
+  try{events=JSON.parse(localStorage.getItem(LS_EVENTS)||'[]')}catch(e){events=[]}
+  if(!Array.isArray(events)||!events.length)events=[...DEFAULT_EVENTS];
+  currentEventId=localStorage.getItem(LS_CURRENT_EVENT)||events[0].id;
+  if(!events.some(e=>e.id===currentEventId))currentEventId=events[0].id;
+  migrateK17();
+  try{circles=JSON.parse(localStorage.getItem(eventKey('circles'))||'[]')}catch(e){circles=[]}
+  prefs={q:'',priority:'all',color:'all',tag:'all',sort:'space'};
+  try{prefs={...prefs,...JSON.parse(localStorage.getItem(eventKey('prefs'))||'{}')}}catch(e){}
+  try{tags=JSON.parse(localStorage.getItem(LS_TAGS)||'[]')}catch(e){tags=[]}
+  try{syncInfo=JSON.parse(localStorage.getItem(eventKey('sync'))||'null')}catch(e){syncInfo=null}
+  if(!Array.isArray(tags)||!tags.length){tags=[...DEFAULT_TAGS];saveTags();}
+  if(!Array.isArray(circles))circles=[];
+  circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state={...stateTemplate(),...(c.state||{})};c.state.tags=(c.state.tags||[]).filter(t=>tags.includes(t));});
+  saveEvents();
+
+}
+function cleanText(s=''){return String(s).replace(/\*\*/g,'').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim();}
+function cleanMd(s=''){return cleanText(String(s).replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1').replace(/\\\|/g,'|'));}
+function normalizeUrl(u=''){
+  u=String(u||'').trim().replace(/^['\"]|['\"]$/g,'').replace(/&amp;/g,'&');
+  if(!u || u==='#' || u==='-' || u==='—' || u==='–' || u==='　' || /^javascript:/i.test(u)) return '';
+  if(u.startsWith('//')) u='https:'+u;
+  try{
+    const absolute=new URL(u,OFFICIAL_URL).href;
+    if(/^https?:\/\//i.test(absolute)) return absolute;
+  }catch(e){}
+  if(/^www\./i.test(u)) u='https://'+u;
+  if(!/^https?:\/\//i.test(u) && /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(u)) u='https://'+u;
+  return /^https?:\/\//i.test(u)?u:'';
+}
+function extractUrl(cell=''){
+  const text=String(cell||'').trim();
+  if(!text) return '';
+  const md=[...text.matchAll(/\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)].map(m=>m[1]).find(x=>normalizeUrl(x));
+  if(md) return normalizeUrl(md);
+  const plain=text.match(/(https?:\/\/[^\s|>\]）]+)/i) || text.match(/\b(www\.[^\s|>\]）]+)/i);
+  return normalizeUrl(plain?plain[1]:'');
+}
+function parseMeta(text=''){
+  const src=String(text);
+  const countMatch=src.match(/参加サークル\s*[：:]\s*([0-9０-９,，]+)\s*サークル/);
+  const dateMatch=src.match(/\(?([0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2})\s*更新\)?/);
+  const fullToHalf=s=>String(s||'').replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0)).replace(/[，,]/g,'');
+  return {expectedCount:countMatch?Number(fullToHalf(countMatch[1])):null,officialUpdated:dateMatch?dateMatch[1]:''};
+}
+function makeRow(space,name,rep,web,pixiv,tw){
+  const s=cleanMd(space),n=cleanMd(name),r=cleanMd(rep);
+  if(!/^[A-Z]-\d{2,3}$/.test(s)||!n) return null;
+  return {id:s+'::'+n,space:s,name:n,rep:r,web:extractUrl(web),pixiv:extractUrl(pixiv),tw:extractUrl(tw),state:stateTemplate()};
+}
+function parseOfficialMarkdown(md){
+  const text=String(md||'').replace(/\r/g,'');
+  const rows=[]; const seen=new Set();
+  const add=row=>{if(row&&!seen.has(row.id)){seen.add(row.id);rows.push(row);}};
+  for(let raw of text.split('\n')){
+    let line=raw.trim().replace(/^L\d+\s*:\s*/,'');
+    if(line.startsWith('|')) line=line.slice(1).trim();
+    if(line.endsWith('|')) line=line.slice(0,-1).trim();
+    if(/^[A-Z]-\d{2,3}\s*\|/.test(line)){
+      const cells=line.split('|').map(x=>x.trim());
+      if(cells.length>=6) add(makeRow(cells[0],cells[1],cells[2],cells[3],cells[4],cells.slice(5).join('|')));
+      continue;
+    }
+    if(/^[A-Z]-\d{2,3}\s*\t/.test(line)){
+      const cells=line.split(/\t+/).map(x=>x.trim());
+      if(cells.length>=6) add(makeRow(cells[0],cells[1],cells[2],cells[3],cells[4],cells.slice(5).join('\t')));
+      continue;
+    }
+    if(/^[A-Z]-\d{2,3}\s{2,}/.test(line)){
+      const cells=line.split(/\s{2,}/).map(x=>x.trim());
+      if(cells.length>=6) add(makeRow(cells[0],cells[1],cells[2],cells[3],cells[4],cells.slice(5).join('  ')));
+    }
+  }
+  if(rows.length<600){
+    const re=/(?:^|\n)\s*(?:L\d+\s*:\s*)?\|?\s*([A-Z]-\d{2,3})\s*\|\s*([^|\n]+)\|\s*([^|\n]+)\|\s*([^|\n]*)\|\s*([^|\n]*)\|\s*([^\n|]*)(?:\|)?/g;
+    let m; while((m=re.exec(text))!==null) add(makeRow(m[1],m[2],m[3],m[4],m[5],m[6]));
+  }
+  return {rows,meta:parseMeta(text),format:'markdown',preview:text.slice(0,180).replace(/\s+/g,' ')};
+}
+function parseOfficialHTML(html){
+  const doc=new DOMParser().parseFromString(String(html),'text/html');
+  const rows=[]; const seen=new Set();
+  for(const tr of [...doc.querySelectorAll('tr')]){
+    const cells=[...tr.querySelectorAll('td,th')];
+    if(cells.length<6) continue;
+    const space=cleanText(cells[0].textContent),name=cleanText(cells[1].textContent),rep=cleanText(cells[2].textContent);
+    if(!/^[A-Z]-\d{2,3}$/.test(space)||!name) continue;
+    const urlAt=i=>{
+      const anchors=[...cells[i].querySelectorAll('a[href]')];
+      for(const a of anchors){const u=normalizeUrl(a.getAttribute('href')||'');if(u)return u;}
+      return '';
+    };
+    const row={id:space+'::'+name,space,name,rep,web:urlAt(3),pixiv:urlAt(4),tw:urlAt(5),state:stateTemplate()};
+    if(!seen.has(row.id)){seen.add(row.id);rows.push(row);}
+  }
+  return {rows,meta:parseMeta(doc.body?.innerText||html),format:'html'};
+}
+function unwrapPayload(text){
+  const s=String(text||'').trim();
+  if(s.startsWith('{')||s.startsWith('[')){
+    try{
+      const j=JSON.parse(s);
+      if(typeof j.contents==='string') return j.contents;
+      if(typeof j.body==='string') return j.body;
+      if(typeof j.content==='string') return j.content;
+      if(typeof j.data==='string') return j.data;
+      if(j.data && typeof j.data.content==='string') return j.data.content;
+      if(j.data && typeof j.data.html==='string') return j.data.html;
+    }catch(e){}
+  }
+  return s;
+}
+function parseOfficialPayload(text){
+  const s=unwrapPayload(text);
+  if(/<table[\s>]/i.test(s)||/<html[\s>]/i.test(s)||/<tr[\s>]/i.test(s)){
+    const h=parseOfficialHTML(s); if(h.rows.length) return h;
+  }
+  return parseOfficialMarkdown(s);
+}
+function validateOfficial(parsed){
+  const rows=parsed.rows||[];
+  if(!rows.length) throw new Error('サークル行を検出できませんでした'+(parsed.preview?`（応答先頭: ${parsed.preview}）`:''));
+  const ids=new Set(rows.map(r=>r.id));
+  if(ids.size!==rows.length) throw new Error(`重複行を検出しました（${rows.length-ids.size}件）`);
+  const expected=parsed.meta.expectedCount||670;
+  if(rows.length!==expected) throw new Error(`公式記載 ${expected}件に対して ${rows.length}件を取得しました`);
+  const bad=rows.find(r=>!r.space||!r.name||typeof r.rep!=='string'||typeof r.web!=='string'||typeof r.pixiv!=='string'||typeof r.tw!=='string');
+  if(bad) throw new Error('必須6項目の解析に失敗しました');
+  parsed.meta.expectedCount=expected;
+  return parsed;
+}
+function signatureLinks(c){return [c.web,c.pixiv,c.tw].filter(Boolean).sort().join('|');}
+function mergeOfficial(newRows){
+  const previous=[...circles];
+  const exact=new Map(previous.map(c=>[c.id,c]));
+  const byName=new Map(); const byLinks=new Map();
+  previous.forEach(c=>{if(c.name){if(!byName.has(c.name))byName.set(c.name,[]);byName.get(c.name).push(c);}const sig=signatureLinks(c);if(sig){if(!byLinks.has(sig))byLinks.set(sig,[]);byLinks.get(sig).push(c);}});
+  let preserved=0,added=0,moved=0,linkChanged=0; const used=new Set();
+  const merged=newRows.map(n=>{
+    let prev=exact.get(n.id);
+    if(!prev){const sameName=byName.get(n.name)||[];if(sameName.length===1)prev=sameName[0];}
+    if(!prev){const sig=signatureLinks(n),sameLinks=sig?(byLinks.get(sig)||[]):[];if(sameLinks.length===1)prev=sameLinks[0];}
+    if(prev&&!used.has(prev)){used.add(prev);preserved++;if(prev.space!==n.space)moved++;if(prev.web!==n.web||prev.pixiv!==n.pixiv||prev.tw!==n.tw)linkChanged++;const st={...stateTemplate(),...prev.state};st.tags=(st.tags||[]).filter(t=>tags.includes(t));return {...n,state:st};}
+    added++;return n;
+  });
+  const removed=previous.filter(c=>!used.has(c)).length; circles=merged;save();return {preserved,added,removed,moved,linkChanged};
+}
+async function fetchWithTimeout(url,ms=20000,options={}){
+  const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(),ms);
+  try{
+    const r=await fetch(url,{cache:'no-store',signal:ctrl.signal,...options});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.text();
+  } finally { clearTimeout(timer); }
+}
+async function syncOfficial(){
+  const btn=document.getElementById('syncBtn'); btn.disabled=true; btn.textContent='公式を確認中…'; setSyncMeta('公式リストを取得しています…','working');
+  const OFFICIAL_URL=currentEvent().officialUrl; const cacheBust=OFFICIAL_URL+(OFFICIAL_URL.includes('?')?'&':'?')+'_catalog_ts='+Date.now();
+  const isWeb=/^https?:$/.test(location.protocol);
+  const sources=[
+    {label:'公式ページ（Reader 全文Markdown）',url:'https://r.jina.ai/'+OFFICIAL_URL,options:{headers:{'X-Respond-With':'markdown','X-Retain-Links':'all','X-No-Cache':'true'}}},
+    {label:'公式ページ（Reader 全文Markdown/HTTP）',url:'https://r.jina.ai/'+OFFICIAL_URL.replace(/^https:/,'http:'),options:{headers:{'X-Respond-With':'markdown','X-Retain-Links':'all','X-No-Cache':'true'}}},
+    {label:'公式ページ（Reader 通常）',url:'https://r.jina.ai/'+OFFICIAL_URL,options:{}},
+    {label:'公式ページ（Reader 通常/HTTP）',url:'https://r.jina.ai/'+OFFICIAL_URL.replace(/^https:/,'http:'),options:{}}
+  ];
+  if(isWeb) sources.push({label:'公式ページ直接',url:cacheBust,options:{}});
+  sources.push(
+    {label:'公式ページ（AllOrigins raw）',url:'https://api.allorigins.win/raw?url='+encodeURIComponent(cacheBust),options:{}},
+    {label:'公式ページ（AllOrigins JSON）',url:'https://api.allorigins.win/get?url='+encodeURIComponent(cacheBust),options:{}}
+  );
+  const errors=[];
+  for(const src of sources){
+    try{
+      setSyncMeta(`${esc(src.label)} から取得中…`,'working');
+      const text=await fetchWithTimeout(src.url,src.label.includes('AllOrigins')?12000:25000,src.options||{});
+      const parsed=validateOfficial(parseOfficialPayload(text));
+      const changes=mergeOfficial(parsed.rows);
+      const linkCounts={web:parsed.rows.filter(r=>r.web).length,pixiv:parsed.rows.filter(r=>r.pixiv).length,tw:parsed.rows.filter(r=>r.tw).length};
+      syncInfo={syncedAt:new Date().toISOString(),officialUpdated:parsed.meta.officialUpdated||'',expectedCount:parsed.meta.expectedCount,actualCount:parsed.rows.length,source:src.label,links:linkCounts,changes};
+      saveSync(); renderAll();
+      const upd=syncInfo.officialUpdated?` / 公式更新 ${syncInfo.officialUpdated}`:'';
+      alert(`公式リスト同期完了\n${parsed.rows.length} / ${syncInfo.expectedCount} サークル${upd}\n\nweb ${linkCounts.web} / pixiv ${linkCounts.pixiv} / tw ${linkCounts.tw}\n既存チェック引継ぎ ${changes.preserved}件\n取得経路：${src.label}`);
+      btn.disabled=false; btn.textContent='公式リスト同期'; return;
+    }catch(e){
+      errors.push(`${src.label}: ${e.name==='AbortError'?'タイムアウト':e.message||e}`);
+    }
+  }
+  btn.disabled=false; btn.textContent='公式リスト同期';
+  setSyncMeta('同期できませんでした。既存データは変更していません。','error');
+  alert('公式リストの同期に失敗しました。\n既存データは上書きしていません。\n\n'+errors.join('\n')+'\n\n※Readerの「応答先頭」が表示された場合、その部分が原因特定に使えます。');
+}
+function score(c){const p={S:4,A:3,B:2,C:1,'':0}[c.state.priority]||0; const color={red:6,orange:5,yellow:4,green:3,blue:2,gray:1}[c.state.color]||0; return p*10+color;}
+function spaceKey(s){const m=(s||'').match(/^([A-Z])-(\d+)$/); return m?m[1]+String(m[2]).padStart(3,'0'):s||'';}
+function filtered(){
+  let a=circles.filter(c=>{
+    const q=prefs.q.trim().toLowerCase();
+    const hit=!q || [c.space,c.name,c.rep,c.state.item,c.state.memo,c.state.tags.join(' ')].join(' ').toLowerCase().includes(q);
+    const pp=prefs.priority==='all'||c.state.priority===prefs.priority||(prefs.priority==='none'&&!c.state.priority);
+    const cc=prefs.color==='all'||c.state.color===prefs.color;
+    const tt=prefs.tag==='all'||c.state.tags.includes(prefs.tag)||(prefs.tag==='unreviewed'&&c.state.tags.length===0);
+    return hit&&pp&&cc&&tt;
+  });
+  if(prefs.sort==='space') a.sort((x,y)=>spaceKey(x.space).localeCompare(spaceKey(y.space),'ja'));
+  if(prefs.sort==='name') a.sort((x,y)=>x.name.localeCompare(y.name,'ja'));
+  if(prefs.sort==='priority') a.sort((x,y)=>score(y)-score(x)||spaceKey(x.space).localeCompare(spaceKey(y.space)));
+  if(prefs.sort==='unvisited') a.sort((x,y)=>Number(x.state.visited)-Number(y.state.visited)||score(y)-score(x));
+  return a;
+}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function webSvg(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11.5 12 4l9 7.5v8.5a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>'}
+function pixivSvg(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" opacity=".22"/><path fill="currentColor" d="M7 5h4.6c2.1 0 3.6.4 4.7 1.3 1.1.9 1.7 2.2 1.7 3.9 0 1.7-.6 3.1-1.7 4-1.1.9-2.7 1.4-4.7 1.4H10v3.4H7zm3 2.5v5.6h1.3c1.3 0 2.3-.2 3-.7s1-1.2 1-2.2c0-.9-.3-1.6-1-2-.7-.5-1.7-.7-3-.7z"/></svg>'}
+function twSvg(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.46 7.36c.01.18.01.37.01.55 0 5.63-4.29 12.12-12.12 12.12-2.41 0-4.65-.71-6.54-1.94.34.04.68.05 1.03.05 2 0 3.84-.68 5.3-1.83a4.27 4.27 0 0 1-3.99-2.96c.27.04.54.07.83.07.4 0 .79-.05 1.16-.15A4.26 4.26 0 0 1 1.72 9.1v-.05c.58.32 1.25.51 1.95.53A4.26 4.26 0 0 1 2.35 4.9a12.1 12.1 0 0 0 8.79 4.46 4.81 4.81 0 0 1-.1-.97 4.26 4.26 0 0 1 7.37-2.91 8.37 8.37 0 0 0 2.7-1.03 4.25 4.25 0 0 1-1.87 2.35 8.5 8.5 0 0 0 2.44-.67 9.08 9.08 0 0 1-2.12 2.2z"/></svg>'}
+function banSvg(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M6.3 17.7 17.7 6.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'}
+function linkSlot(url,kind){
+  const label={web:'web',pixiv:'pixiv',tw:'tw'}[kind];
+  const icon={web:webSvg(),pixiv:pixivSvg(),tw:twSvg()}[kind];
+  if(url)return `<a class="link-slot link-${kind}" href="${esc(url)}" target="_blank" rel="noopener"><span class="link-label">${label}</span><span class="link-mark">${icon}</span></a>`;
+  return `<span class="link-slot off"><span class="link-label">${label}</span><span class="link-mark">${banSvg()}</span></span>`;
+}
+function card(c){
+  const colors=[['red','赤'],['orange','橙'],['yellow','黄'],['green','緑'],['blue','青'],['gray','灰']];
+  const pris=['S','A','B','C',''];
+  const tagBtns=tags.map(t=>`<button class="chip tag ${c.state.tags.includes(t)?'active':''}" data-action="tag" data-value="${esc(t)}">${esc(t)}</button>`).join('');
+  return `<article class="card" data-id="${esc(c.id)}">
+    <div class="card-top">
+      <div class="space">${esc(c.space)}</div>
+      <div style="flex:1"><div class="name">${esc(c.name)}</div><div class="rep">代表：${esc(c.rep||'—')}</div></div>
+      <label class="small"><input type="checkbox" data-action="visited" ${c.state.visited?'checked':''}> 済</label>
+    </div>
+    <div class="official-links">${linkSlot(c.web,'web')}${linkSlot(c.pixiv,'pixiv')}${linkSlot(c.tw,'tw')}</div>
+    <div class="row">${colors.map(([k,l])=>`<button class="chip c-${k} ${c.state.color===k?'active':''}" data-action="color" data-value="${k}">${l}</button>`).join('')}</div>
+    <div class="row">${pris.map(p=>`<button class="chip ${p?'p-'+p:'p-none'} ${c.state.priority===p?'active':''}" data-action="priority" data-value="${p}">${p||'—'}</button>`).join('')}</div>
+    <div class="row">${tagBtns || '<span class="small">分類タグがありません。「分類タグ管理」で追加してください。</span>'}</div>
+    <div class="fields">
+      <input data-field="item" placeholder="購入予定品" value="${esc(c.state.item)}">
+      <input data-field="budget" inputmode="numeric" placeholder="予算" value="${esc(c.state.budget)}">
+      <textarea data-field="memo" placeholder="メモ">${esc(c.state.memo)}</textarea>
+    </div>
+  </article>`;
+}
+function setSyncMeta(text,kind=''){
+  const el=document.getElementById('syncMeta'); if(!el)return;
+  el.className='sync-meta '+kind; el.innerHTML=text;
+}
+function renderSyncMeta(){
+  if(!syncInfo){setSyncMeta(`未同期　｜　取得元：<a href="${OFFICIAL_URL}" target="_blank" rel="noopener">けもケット公式 list.html</a>`);return;}
+  const dt=new Date(syncInfo.syncedAt); const when=isNaN(dt)?'':dt.toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const upd=syncInfo.officialUpdated?`　公式更新 ${esc(syncInfo.officialUpdated)}`:'';
+  const links=syncInfo.links?`　リンク：web ${syncInfo.links.web} / pixiv ${syncInfo.links.pixiv} / tw ${syncInfo.links.tw}`:'';
+  setSyncMeta(`✓ ${syncInfo.actualCount}/${syncInfo.expectedCount}サークル同期済み　${esc(when)}${upd}${links}`,'ok');
+}
+function renderStats(){
+  const a=filtered(); const counts={S:0,A:0,B:0,C:0,visited:0,reviewed:0};
+  circles.forEach(c=>{if(c.state.priority)counts[c.state.priority]++; if(c.state.visited)counts.visited++; if((c.state.tags||[]).length)counts.reviewed++;});
+  document.getElementById('stats').innerHTML=[`全 ${circles.length}`,`表示 ${a.length}`,`S ${counts.S}`,`A ${counts.A}`,`B ${counts.B}`,`C ${counts.C}`,`分類済 ${counts.reviewed}`,`訪問済 ${counts.visited}`].map(x=>`<div class="stat">${x}</div>`).join('');
+}
+function renderFilters(){
+  document.getElementById('q').value=prefs.q; document.getElementById('priorityFilter').value=prefs.priority; document.getElementById('colorFilter').value=prefs.color; document.getElementById('sort').value=prefs.sort;
+  const tf=document.getElementById('tagFilter'); tf.innerHTML='<option value="all">分類：全部</option>'+tags.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')+'<option value="unreviewed">未調査</option>'; tf.value=prefs.tag;
+  if(tf.value!==prefs.tag){prefs.tag='all';savePrefs();tf.value='all';}
+}
+function renderList(){const a=filtered(); document.getElementById('list').innerHTML=a.length?a.map(card).join(''):`<div class="empty">${circles.length?'条件に一致するサークルがありません':'まず「公式リスト同期」を押してください。'}</div>`;}
+function renderTagPage(){
+  const ul=document.getElementById('tagList'); if(!tags.length){ul.innerHTML='<li class="empty">分類タグがありません。</li>';return;}
+  ul.innerHTML=tags.map(t=>{const count=circles.filter(c=>(c.state.tags||[]).includes(t)).length;return `<li class="tag-item" data-tag="${esc(t)}"><div><div><b>${esc(t)}</b></div><div class="small">使用中 ${count} サークル</div></div><div class="tag-actions"><button data-tag-action="rename">名前変更</button><button class="warn" data-tag-action="delete">削除</button></div></li>`;}).join('');
+}
+function renderAll(){renderFilters();renderSyncMeta();renderStats();renderList();renderTagPage();renderEventUI();}
+function updateCircle(id,fn){const c=circles.find(x=>x.id===id);if(!c)return;fn(c);c.state.updatedAt=Date.now();save();}
+function showPage(which){document.getElementById('catalogPage').classList.toggle('hidden',which!=='catalog');document.getElementById('tagPage').classList.toggle('hidden',which!=='tags');document.getElementById('eventPage').classList.toggle('hidden',which!=='events');}
+function bindPref(id,key,event='change'){document.getElementById(id).addEventListener(event,e=>{prefs[key]=e.target.value;savePrefs();renderAll();});}
+function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),event:ev,tags,syncInfo,circles},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ev.id}_backup.json`;a.click();URL.revokeObjectURL(a.href);}
+function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(Array.isArray(o.tags)&&o.tags.length){tags=[...new Set(o.tags.map(x=>String(x).trim()).filter(Boolean))];saveTags();}if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state={...stateTemplate(),...(c.state||{})};c.state.tags=(c.state.tags||[]).filter(t=>tags.includes(t));});if(o.syncInfo)syncInfo=o.syncInfo;save();saveSync();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
+function normalizeTagName(s){return String(s||'').trim();}
+function addTag(){const input=document.getElementById('newTagName');const name=normalizeTagName(input.value);if(!name)return;if(tags.includes(name))return alert('同名タグがすでにあります');tags.push(name);saveTags();input.value='';renderAll();}
+function renameTag(oldName){const next=normalizeTagName(prompt('新しいタグ名',oldName));if(!next||next===oldName)return;if(tags.includes(next))return alert('同名タグがすでにあります');tags=tags.map(t=>t===oldName?next:t);circles.forEach(c=>{c.state.tags=(c.state.tags||[]).map(t=>t===oldName?next:t)});saveTags();save();renderAll();}
+function deleteTag(name){if(!confirm(`「${name}」を削除しますか？\n付与済みサークルからも外れます。`))return;tags=tags.filter(t=>t!==name);circles.forEach(c=>{c.state.tags=(c.state.tags||[]).filter(t=>t!==name)});saveTags();save();renderAll();}
+
+function renderEventUI(){
+  const sel=document.getElementById('eventSelect');
+  sel.innerHTML=events.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}</option>`).join('');
+  sel.value=currentEventId;
+  document.querySelector('header h1').textContent='けもケット 個人カタログ';
+  renderEventPage();
+}
+function renderEventPage(){
+  const el=document.getElementById('eventList'); if(!el)return;
+  el.innerHTML=events.map(e=>`<div class="event-item" data-event-id="${esc(e.id)}"><div><b>${esc(e.name)}</b>${e.id===currentEventId?' <span class="small">（使用中）</span>':''}<div class="event-meta">${esc(e.officialUrl)}</div></div><div class="tag-actions"><button data-event-action="rename">名前変更</button>${events.length>1?'<button class="warn" data-event-action="delete">削除</button>':''}</div></div>`).join('');
+}
+function switchEvent(id){
+  if(id===currentEventId)return; save();savePrefs();saveSync(); currentEventId=id; saveEvents();
+  circles=[];prefs={q:'',priority:'all',color:'all',tag:'all',sort:'space'};syncInfo=null;
+  try{circles=JSON.parse(localStorage.getItem(eventKey('circles'))||'[]')}catch(e){circles=[]}
+  try{prefs={...prefs,...JSON.parse(localStorage.getItem(eventKey('prefs'))||'{}')}}catch(e){}
+  try{syncInfo=JSON.parse(localStorage.getItem(eventKey('sync'))||'null')}catch(e){syncInfo=null}
+  circles.forEach(c=>{c.state={...stateTemplate(),...(c.state||{})};c.state.tags=(c.state.tags||[]).filter(t=>tags.includes(t));});
+  renderAll();renderEventUI();
+}
+function addEvent(){
+  const name=String(document.getElementById('newEventName').value||'').trim();
+  const officialUrl=String(document.getElementById('newEventUrl').value||'').trim();
+  if(!name)return alert('イベント名を入力してください');
+  if(!/^https?:\/\//i.test(officialUrl))return alert('公式リストURLを http:// または https:// から入力してください');
+  let id=slugifyEvent(name),base=id,n=2;while(events.some(e=>e.id===id))id=base+'-'+n++;
+  events.push({id,name,officialUrl});saveEvents();document.getElementById('newEventName').value='';renderEventUI();switchEvent(id);showPage('catalog');
+}
+function renameEvent(id){const ev=events.find(e=>e.id===id);if(!ev)return;const name=String(prompt('イベント名',ev.name)||'').trim();if(!name)return;ev.name=name;saveEvents();renderEventUI();}
+function deleteEvent(id){const ev=events.find(e=>e.id===id);if(!ev||events.length<=1)return;if(!confirm(`「${ev.name}」を削除しますか？\nこの端末に保存した当該イベントの一覧・メモ等も削除します。`))return;['circles','prefs','sync'].forEach(k=>localStorage.removeItem(`kemoket_event_${id}_${k}_v1`));events=events.filter(e=>e.id!==id);if(currentEventId===id)currentEventId=events[0].id;saveEvents();switchEvent(currentEventId);renderEventUI();}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  load(); document.getElementById('eventSelect').addEventListener('change',e=>switchEvent(e.target.value)); document.getElementById('manageEventsBtn').onclick=()=>{showPage('events');renderEventPage();}; document.getElementById('backFromEventsBtn').onclick=()=>showPage('catalog'); document.getElementById('addEventBtn').onclick=addEvent; document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);}); bindPref('q','q','input');bindPref('priorityFilter','priority');bindPref('colorFilter','color');bindPref('tagFilter','tag');bindPref('sort','sort');
+  document.getElementById('syncBtn').onclick=syncOfficial; document.getElementById('exportBtn').onclick=exportData; document.getElementById('importFile').onchange=e=>e.target.files[0]&&importData(e.target.files[0]);
+  document.getElementById('clearBtn').onclick=()=>{if(confirm('色・優先度・分類タグ・メモ・訪問済みをすべて初期化しますか？')){circles.forEach(c=>c.state=stateTemplate());save();renderAll();}};
+  document.getElementById('manageTagsBtn').onclick=()=>{showPage('tags');renderTagPage();}; document.getElementById('backToCatalogBtn').onclick=()=>showPage('catalog'); document.getElementById('addTagBtn').onclick=addTag;
+  document.getElementById('newTagName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addTag();}});
+  document.getElementById('tagList').addEventListener('click',e=>{const item=e.target.closest('[data-tag]');if(!item)return;const name=item.dataset.tag;if(e.target.closest('[data-tag-action="rename"]'))renameTag(name);if(e.target.closest('[data-tag-action="delete"]'))deleteTag(name);});
+  document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const cardEl=e.target.closest('.card');if(!cardEl)return;const id=cardEl.dataset.id,act=b.dataset.action,val=b.dataset.value;if(act==='color')updateCircle(id,c=>c.state.color=val);if(act==='priority')updateCircle(id,c=>c.state.priority=val);if(act==='tag')updateCircle(id,c=>{const arr=c.state.tags||[];const i=arr.indexOf(val);i>=0?arr.splice(i,1):arr.push(val);c.state.tags=arr.filter(t=>tags.includes(t));});renderAll();});
+  document.addEventListener('change',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.action==='visited'){updateCircle(cardEl.dataset.id,c=>c.state.visited=e.target.checked);renderAll();return;}if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);return;}});
+  document.addEventListener('input',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);}});
+  renderAll(); if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+});</script></body></html>
