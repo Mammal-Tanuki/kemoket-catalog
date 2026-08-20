@@ -45,7 +45,8 @@ button.warn{background:#48281d;border-color:#7b5631}
 .chip.active{outline:2px solid #fff;outline-offset:1px}
 .c-red{background:#6a2028}.c-orange{background:#6a421e}.c-yellow{background:#675f1d}.c-green{background:#1d5a39}.c-blue{background:#224e6d}.c-gray{background:#3b404a}
 .p-S{background:#68304e}.p-A{background:#5f3c25}.p-B{background:#3f5124}.p-C{background:#254657}.p-none{background:#343943}
-.tag{background:#252b36}.tag.active{background:#36506e}.tag.soft{background:#202833;color:#c6d7e9}
+.tag{background:var(--tag-bg,#252b36);border-color:var(--tag-border,#404957);color:var(--tag-text,#f5f7fb)}.tag.active{outline:2px solid #fff;outline-offset:1px;box-shadow:0 0 0 2px var(--tag-border,#5d7fa3) inset}.tag.soft{background:#202833;color:#c6d7e9}
+.tag-filter-panel{margin:-2px 0 10px;padding:12px;background:#121721;border:1px solid var(--line);border-radius:16px}.tag-filter-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.tag-filter-head select{width:auto;min-width:120px}.tag-filter-head label{display:flex;align-items:center;gap:6px;color:#d7dce6;font-size:13px}.tag-filter-head label input{width:auto}.tag-filter-chips{display:flex;gap:7px;flex-wrap:wrap}.hidden{display:none!important}.tag-definition{margin:12px 0;padding:12px;border:1px solid #304052;border-radius:14px;background:#111923}.tag-definition b{color:#dff1ff}.tag-form{display:grid;grid-template-columns:1fr 130px;gap:8px;margin:12px 0}.tag-form button{grid-column:1/-1}.tag-item{grid-template-columns:minmax(0,1fr) auto}.tag-main{display:flex;gap:10px;align-items:center;min-width:0}.tag-dot{width:18px;height:18px;border-radius:50%;background:var(--tag-bg,#39414f);border:2px solid var(--tag-border,#657083);flex:0 0 auto}.tag-name{font-weight:800;overflow-wrap:anywhere}.tag-origin{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:2px 7px;margin-left:6px;font-size:10px;color:var(--muted)}.tag-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.tag-actions button{padding:7px 8px;box-shadow:none}.tag-actions select{width:auto;padding:7px 26px 7px 8px;border-radius:10px;font-size:12px}.tag-empty{padding:24px 8px;text-align:center;color:var(--muted)}.candidate-tag{border-style:dashed;opacity:.78}.tag-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.tag-legend span{font-size:11px;color:var(--muted)}
 .fields{display:grid;grid-template-columns:1fr 110px;gap:7px}
 .fields textarea{grid-column:1/-1}
 .small{font-size:12px;color:var(--muted)}
@@ -64,6 +65,7 @@ button.warn{background:#48281d;border-color:#7b5631}
 .event-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
 .event-item:last-child{border-bottom:0}
 .event-meta{font-size:12px;color:var(--muted);margin-top:3px;word-break:break-all}
+@media(min-width:560px){.tag-form{grid-template-columns:1fr 150px auto}.tag-form button{grid-column:auto}}
 @media(min-width:760px){.toolbar{grid-template-columns:2fr 1fr 1fr 1fr}.toolbar.tight{grid-template-columns:repeat(4,1fr)} .toolbar .wide{grid-column:auto} .fields{grid-template-columns:1fr 120px}}
 </style></head><body>
 <header>
@@ -86,10 +88,19 @@ button.warn{background:#48281d;border-color:#7b5631}
       <select id="colorFilter">
         <option value="all">色：全部</option><option value="red">赤</option><option value="orange">橙</option><option value="yellow">黄</option><option value="green">緑</option><option value="blue">青</option><option value="gray">灰</option>
       </select>
-      <select id="tagFilter"></select>
+      <button id="tagFilterToggle" type="button" aria-expanded="false">タグ：すべて</button>
       <select id="sort">
         <option value="space">配置順</option><option value="priority">優先度順</option><option value="name">サークル名順</option><option value="unvisited">未訪問優先</option>
       </select>
+    </div>
+    <div id="tagFilterPanel" class="tag-filter-panel hidden">
+      <div class="tag-filter-head">
+        <b>タグ絞り込み</b>
+        <select id="tagMatchMode" aria-label="タグ検索方法"><option value="or">いずれか（OR）</option><option value="and">すべて（AND）</option></select>
+        <label><input id="untaggedOnly" type="checkbox"> 未タグのみ</label>
+        <button id="clearTagFilter" type="button">解除</button>
+      </div>
+      <div id="tagFilterChips" class="tag-filter-chips"></div>
     </div>
     <div class="toolbar tight">
       <button class="primary" id="syncBtn">公式リスト同期</button>
@@ -100,7 +111,7 @@ button.warn{background:#48281d;border-color:#7b5631}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v7</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v8</span></div>
   </section>
 
   <section id="eventPage" class="page hidden">
@@ -118,31 +129,46 @@ button.warn{background:#48281d;border-color:#7b5631}
 
   <section id="tagPage" class="page hidden">
     <div class="panel">
-      <div class="kv"><h2 style="margin:0">分類タグ管理</h2><button id="backToCatalogBtn">← 戻る</button></div>
-      <p class="note">ここで分類タグの追加・名前変更・削除ができます。変更は全サークルのタグ付けにも反映されます。</p>
-      <div class="toolbar" style="margin-top:10px">
-        <input id="newTagName" class="wide" placeholder="新しいタグ名（例：完全ケモノ / R18 / 本命候補）">
-        <button class="good" id="addTagBtn">タグ追加</button>
+      <div class="kv"><h2 style="margin:0">タグ管理</h2><button id="backToCatalogBtn">← 戻る</button></div>
+      <div class="tag-definition note">
+        <b>このアプリでいう「タグ」</b><br>
+        公式サークルリストにはない情報を、あとから検索・絞り込み・整理のために付ける短いラベルです。タグは「そのサークルの本質を断定する分類」ではなく、<b>そのイベントで確認したい特徴や観点を記録する道具</b>として扱います。
       </div>
-      <ul class="listless" id="tagList"></ul>
-      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
       <div class="note">
-        <b>分類の考え方（いったんの方針）</b><br>
-        公式側に検索タグが見当たらないので、まずは手動タグ付け前提にしてあります。次段階では、サークル名・web・pixiv・twのリンク先をたどって、プロフィール文や頒布告知から「ケモノ / 獣化 / transfur / 人間寄りNG」などの候補を半自動で下書きする方向がよさそうです。
+        <b>v8のルール：</b> タグの種類は全イベントで共通、サークルへの付与はイベントごとに別保存します。今は<b>自分で作る個人タグのみ</b>です。将来の自動調査は、勝手に確定せず「候補＋根拠」を出し、採用したものだけ正式タグにする設計を前提にしています。
       </div>
+      <div class="tag-form">
+        <input id="newTagName" placeholder="新しいタグ名（自由入力）">
+        <select id="newTagColor" aria-label="タグ色"></select>
+        <button class="good" id="addTagBtn">タグを追加</button>
+      </div>
+      <div class="small">タグは ↑↓ で並べ替えできます。色・名前は後から変更可能です。</div>
+      <ul class="listless" id="tagList"></ul>
     </div>
   </section>
 </main>
-<script>const VERSION='2026-08-21-7';
+<script>const VERSION='2026-08-21-8';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
-const LS_TAGS='kemoket_shared_tags_v1';
-const DEFAULT_TAGS=['ケモノ','獣化','transfur','要調査','人間寄りNG'];
+const LS_TAG_DEFS='kemoket_tag_defs_v2';
+const LEGACY_LS_TAGS='kemoket_shared_tags_v1';
+const LEGACY_DEFAULT_TAGS=['ケモノ','獣化','transfur','要調査','人間寄りNG'];
+const TAG_COLORS=[
+  {key:'slate',label:'灰',bg:'#343b49',border:'#687386',text:'#f5f7fb'},
+  {key:'red',label:'赤',bg:'#5f2830',border:'#9b4653',text:'#fff2f4'},
+  {key:'orange',label:'橙',bg:'#5d3b20',border:'#98613a',text:'#fff5e9'},
+  {key:'yellow',label:'黄',bg:'#59531e',border:'#8d8439',text:'#fffbdc'},
+  {key:'green',label:'緑',bg:'#214d37',border:'#3c7c5c',text:'#effff6'},
+  {key:'blue',label:'青',bg:'#23485f',border:'#3e7798',text:'#eff9ff'},
+  {key:'purple',label:'紫',bg:'#44325f',border:'#73559c',text:'#f8f1ff'},
+  {key:'pink',label:'桃',bg:'#5d304f',border:'#99547f',text:'#fff1fa'}
+];
 const DEFAULT_EVENTS=[{id:'kemoket17',name:'けもケット17',officialUrl:'https://skypalette.jp/kemoket/list.html'}];
-const stateTemplate=()=>({color:'gray',priority:'',tags:[],item:'',budget:'',memo:'',visited:false,updatedAt:0});
+const stateTemplate=()=>({color:'gray',priority:'',tags:[],tagMeta:{},tagCandidates:[],item:'',budget:'',memo:'',visited:false,updatedAt:0});
+const defaultPrefs=()=>({q:'',priority:'all',color:'all',tagIds:[],tagMode:'or',untaggedOnly:false,sort:'space'});
 let circles=[];
-let prefs={q:'',priority:'all',color:'all',tag:'all',sort:'space'};
-let tags=[];
+let prefs=defaultPrefs();
+let tagDefs=[];
 let syncInfo=null;
 let events=[];
 let currentEventId='kemoket17';
@@ -152,30 +178,57 @@ function slugifyEvent(name){const base=String(name||'event').toLowerCase().repla
 function saveEvents(){localStorage.setItem(LS_EVENTS,JSON.stringify(events));localStorage.setItem(LS_CURRENT_EVENT,currentEventId);}
 function save(){localStorage.setItem(eventKey('circles'), JSON.stringify(circles));}
 function savePrefs(){localStorage.setItem(eventKey('prefs'), JSON.stringify(prefs));}
-function saveTags(){localStorage.setItem(LS_TAGS, JSON.stringify(tags));}
+function saveTagDefs(){localStorage.setItem(LS_TAG_DEFS, JSON.stringify(tagDefs));}
 function saveSync(){localStorage.setItem(eventKey('sync'), JSON.stringify(syncInfo));}
+function tagDef(id){return tagDefs.find(t=>t.id===id);}
+function tagColor(key){return TAG_COLORS.find(c=>c.key===key)||TAG_COLORS[0];}
+function tagStyle(def){const c=tagColor(def?.color);return `--tag-bg:${c.bg};--tag-border:${c.border};--tag-text:${c.text}`;}
+function makeTagId(name){let h=2166136261;for(const ch of String(name)){h^=ch.codePointAt(0);h=Math.imul(h,16777619)}return 'tag_'+(h>>>0).toString(36)+'_'+Date.now().toString(36).slice(-4);}
+function legacyTagUsage(){
+  const used=new Set();
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'';if(!/^kemoket_event_.*_circles_v1$/.test(k)&&k!=='kemoket17_circles_v2')continue;try{const arr=JSON.parse(localStorage.getItem(k)||'[]');for(const c of arr||[])for(const t of c?.state?.tags||[])if(typeof t==='string')used.add(t)}catch(e){}}
+  return used;
+}
+function migrateTagDefs(){
+  if(localStorage.getItem(LS_TAG_DEFS)!==null){try{tagDefs=JSON.parse(localStorage.getItem(LS_TAG_DEFS)||'[]')}catch(e){tagDefs=[]}return;}
+  let legacy=[];try{legacy=JSON.parse(localStorage.getItem(LEGACY_LS_TAGS)||'[]')}catch(e){}
+  if(!Array.isArray(legacy))legacy=[];
+  const names=legacy.map(x=>typeof x==='string'?x:String(x?.name||'')).map(x=>x.trim()).filter(Boolean);
+  const used=legacyTagUsage();
+  const onlyOldDefaults=names.length===LEGACY_DEFAULT_TAGS.length&&LEGACY_DEFAULT_TAGS.every(x=>names.includes(x));
+  if(onlyOldDefaults&&used.size===0){tagDefs=[];}else{tagDefs=[...new Set(names)].map((name,i)=>({id:makeTagId(name),name,color:'slate',createdBy:'user',createdAt:Date.now()+i,order:i}));}
+  saveTagDefs();
+}
+function normalizeTagDefs(){
+  if(!Array.isArray(tagDefs))tagDefs=[];
+  tagDefs=tagDefs.map((t,i)=>typeof t==='string'?({id:makeTagId(t),name:t,color:'slate',createdBy:'user',createdAt:Date.now()+i,order:i}):({id:String(t.id||makeTagId(t.name||'tag')),name:String(t.name||'').trim(),color:TAG_COLORS.some(c=>c.key===t.color)?t.color:'slate',createdBy:t.createdBy==='auto'?'auto':'user',createdAt:Number(t.createdAt)||Date.now(),order:Number.isFinite(Number(t.order))?Number(t.order):i})).filter(t=>t.name);
+  const seen=new Set();tagDefs=tagDefs.filter(t=>!seen.has(t.id)&&seen.add(t.id)).sort((a,b)=>a.order-b.order);tagDefs.forEach((t,i)=>t.order=i);saveTagDefs();
+}
+function normalizeStateTags(st){
+  st={...stateTemplate(),...(st||{})};
+  const byName=new Map(tagDefs.map(t=>[t.name,t.id]));
+  st.tags=[...new Set((Array.isArray(st.tags)?st.tags:[]).map(v=>tagDef(v)?v:byName.get(String(v))||'').filter(id=>!!tagDef(id)))];
+  if(!st.tagMeta||typeof st.tagMeta!=='object'||Array.isArray(st.tagMeta))st.tagMeta={};
+  const nextMeta={};for(const id of st.tags){const old=st.tagMeta[id]||{};nextMeta[id]={status:'confirmed',source:old.source==='auto'?'auto':'manual',updatedAt:Number(old.updatedAt)||Date.now()};}st.tagMeta=nextMeta;
+  if(!Array.isArray(st.tagCandidates))st.tagCandidates=[];
+  st.tagCandidates=st.tagCandidates.filter(x=>x&&tagDef(x.tagId)&&!st.tags.includes(x.tagId)).map(x=>({tagId:x.tagId,status:'candidate',source:'auto',confidence:x.confidence??null,evidence:Array.isArray(x.evidence)?x.evidence:[]}));
+  return st;
+}
 function migrateK17(){
   if(currentEventId!=='kemoket17')return;
   const maps=[['kemoket17_circles_v2','circles'],['kemoket17_prefs_v2','prefs'],['kemoket17_sync_v1','sync']];
   for(const [oldKey,kind] of maps){const nk=eventKey(kind);if(!localStorage.getItem(nk)&&localStorage.getItem(oldKey))localStorage.setItem(nk,localStorage.getItem(oldKey));}
-  if(!localStorage.getItem(LS_TAGS)&&localStorage.getItem('kemoket17_tags_v1'))localStorage.setItem(LS_TAGS,localStorage.getItem('kemoket17_tags_v1'));
 }
 function load(){
   try{events=JSON.parse(localStorage.getItem(LS_EVENTS)||'[]')}catch(e){events=[]}
   if(!Array.isArray(events)||!events.length)events=[...DEFAULT_EVENTS];
-  currentEventId=localStorage.getItem(LS_CURRENT_EVENT)||events[0].id;
-  if(!events.some(e=>e.id===currentEventId))currentEventId=events[0].id;
-  migrateK17();
+  currentEventId=localStorage.getItem(LS_CURRENT_EVENT)||events[0].id;if(!events.some(e=>e.id===currentEventId))currentEventId=events[0].id;
+  migrateK17();migrateTagDefs();normalizeTagDefs();
   try{circles=JSON.parse(localStorage.getItem(eventKey('circles'))||'[]')}catch(e){circles=[]}
-  prefs={q:'',priority:'all',color:'all',tag:'all',sort:'space'};
-  try{prefs={...prefs,...JSON.parse(localStorage.getItem(eventKey('prefs'))||'{}')}}catch(e){}
-  try{tags=JSON.parse(localStorage.getItem(LS_TAGS)||'[]')}catch(e){tags=[]}
+  prefs=defaultPrefs();try{const raw=JSON.parse(localStorage.getItem(eventKey('prefs'))||'{}');prefs={...prefs,...raw};if(raw.tag&&raw.tag!=='all'&&raw.tag!=='unreviewed'){const d=tagDefs.find(t=>t.name===raw.tag);if(d)prefs.tagIds=[d.id]}if(raw.tag==='unreviewed')prefs.untaggedOnly=true;}catch(e){}
+  prefs.tagIds=(Array.isArray(prefs.tagIds)?prefs.tagIds:[]).filter(id=>!!tagDef(id));prefs.tagMode=prefs.tagMode==='and'?'and':'or';prefs.untaggedOnly=!!prefs.untaggedOnly;
   try{syncInfo=JSON.parse(localStorage.getItem(eventKey('sync'))||'null')}catch(e){syncInfo=null}
-  if(!Array.isArray(tags)||!tags.length){tags=[...DEFAULT_TAGS];saveTags();}
-  if(!Array.isArray(circles))circles=[];
-  circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state={...stateTemplate(),...(c.state||{})};c.state.tags=(c.state.tags||[]).filter(t=>tags.includes(t));});
-  saveEvents();
-
+  if(!Array.isArray(circles))circles=[];circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state=normalizeStateTags(c.state);});save();saveEvents();savePrefs();
 }
 function cleanText(s=''){return String(s).replace(/\*\*/g,'').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim();}
 function cleanMd(s=''){return cleanText(String(s).replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1').replace(/\\\|/g,'|'));}
@@ -321,7 +374,7 @@ function mergeOfficial(newRows){
     let prev=exact.get(n.id);
     if(!prev){const sameName=byName.get(n.name)||[];if(sameName.length===1)prev=sameName[0];}
     if(!prev){const sig=signatureLinks(n),sameLinks=sig?(byLinks.get(sig)||[]):[];if(sameLinks.length===1)prev=sameLinks[0];}
-    if(prev&&!used.has(prev)){used.add(prev);preserved++;if(prev.space!==n.space)moved++;if(prev.web!==n.web||prev.pixiv!==n.pixiv||prev.tw!==n.tw)linkChanged++;const st={...stateTemplate(),...prev.state};st.tags=(st.tags||[]).filter(t=>tags.includes(t));return {...n,state:st};}
+    if(prev&&!used.has(prev)){used.add(prev);preserved++;if(prev.space!==n.space)moved++;if(prev.web!==n.web||prev.pixiv!==n.pixiv||prev.tw!==n.tw)linkChanged++;const st=normalizeStateTags(prev.state);return {...n,state:st};}
     added++;return n;
   });
   const removed=previous.filter(c=>!used.has(c)).length; circles=merged;save();return {preserved,added,removed,moved,linkChanged};
@@ -374,11 +427,15 @@ function score(c){const p={S:4,A:3,B:2,C:1,'':0}[c.state.priority]||0; const col
 function spaceKey(s){const m=(s||'').match(/^([A-Z])-(\d+)$/); return m?m[1]+String(m[2]).padStart(3,'0'):s||'';}
 function filtered(){
   let a=circles.filter(c=>{
+    const confirmed=(c.state.tags||[]).filter(id=>!!tagDef(id));
+    const tagNames=confirmed.map(id=>tagDef(id)?.name||'');
     const q=prefs.q.trim().toLowerCase();
-    const hit=!q || [c.space,c.name,c.rep,c.state.item,c.state.memo,c.state.tags.join(' ')].join(' ').toLowerCase().includes(q);
+    const hit=!q || [c.space,c.name,c.rep,c.state.item,c.state.memo,...tagNames].join(' ').toLowerCase().includes(q);
     const pp=prefs.priority==='all'||c.state.priority===prefs.priority||(prefs.priority==='none'&&!c.state.priority);
     const cc=prefs.color==='all'||c.state.color===prefs.color;
-    const tt=prefs.tag==='all'||c.state.tags.includes(prefs.tag)||(prefs.tag==='unreviewed'&&c.state.tags.length===0);
+    let tt=true;
+    if(prefs.untaggedOnly) tt=confirmed.length===0;
+    else if(prefs.tagIds.length) tt=prefs.tagMode==='and'?prefs.tagIds.every(id=>confirmed.includes(id)):prefs.tagIds.some(id=>confirmed.includes(id));
     return hit&&pp&&cc&&tt;
   });
   if(prefs.sort==='space') a.sort((x,y)=>spaceKey(x.space).localeCompare(spaceKey(y.space),'ja'));
@@ -401,7 +458,8 @@ function linkSlot(url,kind){
 function card(c){
   const colors=[['red','赤'],['orange','橙'],['yellow','黄'],['green','緑'],['blue','青'],['gray','灰']];
   const pris=['S','A','B','C',''];
-  const tagBtns=tags.map(t=>`<button class="chip tag ${c.state.tags.includes(t)?'active':''}" data-action="tag" data-value="${esc(t)}">${esc(t)}</button>`).join('');
+  const tagBtns=tagDefs.map(t=>`<button class="chip tag ${c.state.tags.includes(t.id)?'active':''}" style="${tagStyle(t)}" data-action="tag" data-value="${esc(t.id)}">${esc(t.name)}</button>`).join('');
+  const candidateBtns=(c.state.tagCandidates||[]).map(x=>{const t=tagDef(x.tagId);return t?`<button class="chip tag candidate-tag" style="${tagStyle(t)}" data-action="accept-candidate" data-value="${esc(t.id)}" title="自動候補。押すと採用">候補：${esc(t.name)} ＋</button>`:''}).join('');
   return `<article class="card" data-id="${esc(c.id)}">
     <div class="card-top">
       <div class="space">${esc(c.space)}</div>
@@ -411,7 +469,7 @@ function card(c){
     <div class="official-links">${linkSlot(c.web,'web')}${linkSlot(c.pixiv,'pixiv')}${linkSlot(c.tw,'tw')}</div>
     <div class="row">${colors.map(([k,l])=>`<button class="chip c-${k} ${c.state.color===k?'active':''}" data-action="color" data-value="${k}">${l}</button>`).join('')}</div>
     <div class="row">${pris.map(p=>`<button class="chip ${p?'p-'+p:'p-none'} ${c.state.priority===p?'active':''}" data-action="priority" data-value="${p}">${p||'—'}</button>`).join('')}</div>
-    <div class="row">${tagBtns || '<span class="small">分類タグがありません。「分類タグ管理」で追加してください。</span>'}</div>
+    <div class="row">${tagBtns || '<span class="small">タグはまだありません。右上の 🏷️ から作成できます。</span>'}${candidateBtns}</div>
     <div class="fields">
       <input data-field="item" placeholder="購入予定品" value="${esc(c.state.item)}">
       <input data-field="budget" inputmode="numeric" placeholder="予算" value="${esc(c.state.budget)}">
@@ -431,31 +489,42 @@ function renderSyncMeta(){
   setSyncMeta(`✓ ${syncInfo.actualCount}/${syncInfo.expectedCount}サークル同期済み　${esc(when)}${upd}${links}`,'ok');
 }
 function renderStats(){
-  const a=filtered(); const counts={S:0,A:0,B:0,C:0,visited:0,reviewed:0};
-  circles.forEach(c=>{if(c.state.priority)counts[c.state.priority]++; if(c.state.visited)counts.visited++; if((c.state.tags||[]).length)counts.reviewed++;});
-  document.getElementById('stats').innerHTML=[`全 ${circles.length}`,`表示 ${a.length}`,`S ${counts.S}`,`A ${counts.A}`,`B ${counts.B}`,`C ${counts.C}`,`分類済 ${counts.reviewed}`,`訪問済 ${counts.visited}`].map(x=>`<div class="stat">${x}</div>`).join('');
+  const a=filtered(); const counts={S:0,A:0,B:0,C:0,visited:0,tagged:0};
+  circles.forEach(c=>{if(c.state.priority)counts[c.state.priority]++;if(c.state.visited)counts.visited++;if((c.state.tags||[]).length)counts.tagged++;});
+  document.getElementById('stats').innerHTML=[`全 ${circles.length}`,`表示 ${a.length}`,`S ${counts.S}`,`A ${counts.A}`,`B ${counts.B}`,`C ${counts.C}`,`タグ付 ${counts.tagged}`,`訪問済 ${counts.visited}`].map(x=>`<div class="stat">${x}</div>`).join('');
+}
+function renderTagFilters(){
+  const btn=document.getElementById('tagFilterToggle');const panel=document.getElementById('tagFilterPanel');const chips=document.getElementById('tagFilterChips');
+  document.getElementById('tagMatchMode').value=prefs.tagMode;document.getElementById('untaggedOnly').checked=prefs.untaggedOnly;
+  chips.innerHTML=tagDefs.length?tagDefs.map(t=>`<button type="button" class="chip tag ${prefs.tagIds.includes(t.id)?'active':''}" style="${tagStyle(t)}" data-filter-tag="${esc(t.id)}">${esc(t.name)}</button>`).join(''):'<span class="small">タグがまだありません。右上の 🏷️ から作成できます。</span>';
+  let label='タグ：すべて';if(prefs.untaggedOnly)label='タグ：未タグのみ';else if(prefs.tagIds.length)label=`タグ：${prefs.tagIds.length}件 ${prefs.tagMode.toUpperCase()}`;btn.textContent=label;
+  btn.setAttribute('aria-expanded',String(!panel.classList.contains('hidden')));
 }
 function renderFilters(){
-  document.getElementById('q').value=prefs.q; document.getElementById('priorityFilter').value=prefs.priority; document.getElementById('colorFilter').value=prefs.color; document.getElementById('sort').value=prefs.sort;
-  const tf=document.getElementById('tagFilter'); tf.innerHTML='<option value="all">分類：全部</option>'+tags.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')+'<option value="unreviewed">未調査</option>'; tf.value=prefs.tag;
-  if(tf.value!==prefs.tag){prefs.tag='all';savePrefs();tf.value='all';}
+  document.getElementById('q').value=prefs.q;document.getElementById('priorityFilter').value=prefs.priority;document.getElementById('colorFilter').value=prefs.color;document.getElementById('sort').value=prefs.sort;renderTagFilters();
 }
-function renderList(){const a=filtered(); document.getElementById('list').innerHTML=a.length?a.map(card).join(''):`<div class="empty">${circles.length?'条件に一致するサークルがありません':'まず「公式リスト同期」を押してください。'}</div>`;}
+function renderList(){const a=filtered();document.getElementById('list').innerHTML=a.length?a.map(card).join(''):`<div class="empty">${circles.length?'条件に一致するサークルがありません':'まず「公式リスト同期」を押してください。'}</div>`;}
+function colorOptions(selected){return TAG_COLORS.map(c=>`<option value="${c.key}" ${c.key===selected?'selected':''}>${c.label}</option>`).join('');}
 function renderTagPage(){
-  const ul=document.getElementById('tagList'); if(!tags.length){ul.innerHTML='<li class="empty">分類タグがありません。</li>';return;}
-  ul.innerHTML=tags.map(t=>{const count=circles.filter(c=>(c.state.tags||[]).includes(t)).length;return `<li class="tag-item" data-tag="${esc(t)}"><div><div><b>${esc(t)}</b></div><div class="small">使用中 ${count} サークル</div></div><div class="tag-actions"><button data-tag-action="rename">名前変更</button><button class="warn" data-tag-action="delete">削除</button></div></li>`;}).join('');
+  const newColor=document.getElementById('newTagColor');if(newColor&&!newColor.options.length)newColor.innerHTML=colorOptions('slate');
+  const ul=document.getElementById('tagList');if(!tagDefs.length){ul.innerHTML='<li class="tag-empty">タグはまだありません。<br>上の欄から、自分にとって役立つラベルを自由に作れます。</li>';return;}
+  ul.innerHTML=tagDefs.map((t,i)=>{const count=circles.filter(c=>(c.state.tags||[]).includes(t.id)).length;return `<li class="tag-item" data-tag-id="${esc(t.id)}"><div class="tag-main"><span class="tag-dot" style="${tagStyle(t)}"></span><div><div class="tag-name">${esc(t.name)}<span class="tag-origin">${t.createdBy==='auto'?'自動生成':'個人タグ'}</span></div><div class="small">このイベントで ${count} サークルに付与</div></div></div><div class="tag-actions"><button data-tag-action="up" ${i===0?'disabled':''}>↑</button><button data-tag-action="down" ${i===tagDefs.length-1?'disabled':''}>↓</button><select data-tag-action="color" aria-label="タグ色">${colorOptions(t.color)}</select><button data-tag-action="rename">名前</button><button class="warn" data-tag-action="delete">削除</button></div></li>`;}).join('');
 }
 function renderAll(){renderFilters();renderSyncMeta();renderStats();renderList();renderTagPage();renderEventUI();}
 function updateCircle(id,fn){const c=circles.find(x=>x.id===id);if(!c)return;fn(c);c.state.updatedAt=Date.now();save();}
 function showPage(which){document.getElementById('catalogPage').classList.toggle('hidden',which!=='catalog');document.getElementById('tagPage').classList.toggle('hidden',which!=='tags');document.getElementById('eventPage').classList.toggle('hidden',which!=='events');}
 function bindPref(id,key,event='change'){document.getElementById(id).addEventListener(event,e=>{prefs[key]=e.target.value;savePrefs();renderAll();});}
-function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),event:ev,tags,syncInfo,circles},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ev.id}_backup.json`;a.click();URL.revokeObjectURL(a.href);}
-function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(Array.isArray(o.tags)&&o.tags.length){tags=[...new Set(o.tags.map(x=>String(x).trim()).filter(Boolean))];saveTags();}if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state={...stateTemplate(),...(c.state||{})};c.state.tags=(c.state.tags||[]).filter(t=>tags.includes(t));});if(o.syncInfo)syncInfo=o.syncInfo;save();saveSync();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
-function normalizeTagName(s){return String(s||'').trim();}
-function addTag(){const input=document.getElementById('newTagName');const name=normalizeTagName(input.value);if(!name)return;if(tags.includes(name))return alert('同名タグがすでにあります');tags.push(name);saveTags();input.value='';renderAll();}
-function renameTag(oldName){const next=normalizeTagName(prompt('新しいタグ名',oldName));if(!next||next===oldName)return;if(tags.includes(next))return alert('同名タグがすでにあります');tags=tags.map(t=>t===oldName?next:t);circles.forEach(c=>{c.state.tags=(c.state.tags||[]).map(t=>t===oldName?next:t)});saveTags();save();renderAll();}
-function deleteTag(name){if(!confirm(`「${name}」を削除しますか？\n付与済みサークルからも外れます。`))return;tags=tags.filter(t=>t!==name);circles.forEach(c=>{c.state.tags=(c.state.tags||[]).filter(t=>t!==name)});saveTags();save();renderAll();}
-
+function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),event:ev,tagDefs,syncInfo,circles},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ev.id}_backup.json`;a.click();URL.revokeObjectURL(a.href);}
+function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(Array.isArray(o.tagDefs)){tagDefs=o.tagDefs;normalizeTagDefs();}else if(Array.isArray(o.tags)){tagDefs=o.tags.map((x,i)=>typeof x==='string'?({id:makeTagId(x),name:x,color:'slate',createdBy:'user',createdAt:Date.now()+i,order:i}):x);normalizeTagDefs();}if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state=normalizeStateTags(c.state);});if(o.syncInfo)syncInfo=o.syncInfo;save();saveSync();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
+function normalizeTagName(s){return String(s||'').trim().replace(/\s+/g,' ');}
+function addTag(){const input=document.getElementById('newTagName');const name=normalizeTagName(input.value);const color=document.getElementById('newTagColor').value||'slate';if(!name)return alert('タグ名を入力してください');if(tagDefs.some(t=>t.name===name))return alert('同名タグがすでにあります');tagDefs.push({id:makeTagId(name),name,color,createdBy:'user',createdAt:Date.now(),order:tagDefs.length});saveTagDefs();input.value='';renderAll();}
+function renameTag(id){const t=tagDef(id);if(!t)return;const next=normalizeTagName(prompt('新しいタグ名',t.name));if(!next||next===t.name)return;if(tagDefs.some(x=>x.id!==id&&x.name===next))return alert('同名タグがすでにあります');t.name=next;saveTagDefs();renderAll();}
+function recolorTag(id,color){const t=tagDef(id);if(!t||!TAG_COLORS.some(c=>c.key===color))return;t.color=color;saveTagDefs();renderAll();}
+function moveTag(id,delta){const i=tagDefs.findIndex(t=>t.id===id);const j=i+delta;if(i<0||j<0||j>=tagDefs.length)return;[tagDefs[i],tagDefs[j]]=[tagDefs[j],tagDefs[i]];tagDefs.forEach((t,n)=>t.order=n);saveTagDefs();renderAll();}
+function removeTagFromAllEvents(id){
+  for(const ev of events){const key=`kemoket_event_${ev.id}_circles_v1`;let arr=ev.id===currentEventId?circles:null;if(arr===null){try{arr=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){arr=[]}}if(!Array.isArray(arr))continue;for(const c of arr){c.state=normalizeStateTags(c.state);c.state.tags=(c.state.tags||[]).filter(x=>x!==id);delete c.state.tagMeta[id];c.state.tagCandidates=(c.state.tagCandidates||[]).filter(x=>x.tagId!==id);}localStorage.setItem(key,JSON.stringify(arr));if(ev.id===currentEventId)circles=arr;}
+}
+function deleteTag(id){const t=tagDef(id);if(!t)return;if(!confirm(`「${t.name}」を削除しますか？\nすべてのイベントで、このタグの付与情報も削除されます。`))return;removeTagFromAllEvents(id);tagDefs=tagDefs.filter(x=>x.id!==id);tagDefs.forEach((x,n)=>x.order=n);prefs.tagIds=prefs.tagIds.filter(x=>x!==id);saveTagDefs();savePrefs();save();renderAll();}
 function renderEventUI(){
   const sel=document.getElementById('eventSelect');
   sel.innerHTML=events.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}</option>`).join('');
@@ -469,11 +538,11 @@ function renderEventPage(){
 }
 function switchEvent(id){
   if(id===currentEventId)return; save();savePrefs();saveSync(); currentEventId=id; saveEvents();
-  circles=[];prefs={q:'',priority:'all',color:'all',tag:'all',sort:'space'};syncInfo=null;
+  circles=[];prefs=defaultPrefs();syncInfo=null;
   try{circles=JSON.parse(localStorage.getItem(eventKey('circles'))||'[]')}catch(e){circles=[]}
-  try{prefs={...prefs,...JSON.parse(localStorage.getItem(eventKey('prefs'))||'{}')}}catch(e){}
+  try{const raw=JSON.parse(localStorage.getItem(eventKey('prefs'))||'{}');prefs={...prefs,...raw};if(raw.tag&&raw.tag!=='all'&&raw.tag!=='unreviewed'){const d=tagDefs.find(t=>t.name===raw.tag);if(d)prefs.tagIds=[d.id]}if(raw.tag==='unreviewed')prefs.untaggedOnly=true;}catch(e){}
   try{syncInfo=JSON.parse(localStorage.getItem(eventKey('sync'))||'null')}catch(e){syncInfo=null}
-  circles.forEach(c=>{c.state={...stateTemplate(),...(c.state||{})};c.state.tags=(c.state.tags||[]).filter(t=>tags.includes(t));});
+  circles.forEach(c=>{c.state=normalizeStateTags(c.state);});prefs.tagIds=(Array.isArray(prefs.tagIds)?prefs.tagIds:[]).filter(id=>!!tagDef(id));
   renderAll();renderEventUI();
 }
 function addEvent(){
@@ -488,14 +557,24 @@ function renameEvent(id){const ev=events.find(e=>e.id===id);if(!ev)return;const 
 function deleteEvent(id){const ev=events.find(e=>e.id===id);if(!ev||events.length<=1)return;if(!confirm(`「${ev.name}」を削除しますか？\nこの端末に保存した当該イベントの一覧・メモ等も削除します。`))return;['circles','prefs','sync'].forEach(k=>localStorage.removeItem(`kemoket_event_${id}_${k}_v1`));events=events.filter(e=>e.id!==id);if(currentEventId===id)currentEventId=events[0].id;saveEvents();switchEvent(currentEventId);renderEventUI();}
 
 window.addEventListener('DOMContentLoaded',()=>{
-  load(); document.getElementById('eventSelect').addEventListener('change',e=>switchEvent(e.target.value)); document.getElementById('manageEventsBtn').onclick=()=>{showPage('events');renderEventPage();}; document.getElementById('backFromEventsBtn').onclick=()=>showPage('catalog'); document.getElementById('addEventBtn').onclick=addEvent; document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);}); bindPref('q','q','input');bindPref('priorityFilter','priority');bindPref('colorFilter','color');bindPref('tagFilter','tag');bindPref('sort','sort');
-  document.getElementById('syncBtn').onclick=syncOfficial; document.getElementById('exportBtn').onclick=exportData; document.getElementById('importFile').onchange=e=>e.target.files[0]&&importData(e.target.files[0]);
-  document.getElementById('clearBtn').onclick=()=>{if(confirm('色・優先度・分類タグ・メモ・訪問済みをすべて初期化しますか？')){circles.forEach(c=>c.state=stateTemplate());save();renderAll();}};
-  document.getElementById('manageTagsBtn').onclick=()=>{showPage('tags');renderTagPage();}; document.getElementById('backToCatalogBtn').onclick=()=>showPage('catalog'); document.getElementById('addTagBtn').onclick=addTag;
+  load();
+  document.getElementById('eventSelect').addEventListener('change',e=>switchEvent(e.target.value));
+  document.getElementById('manageEventsBtn').onclick=()=>{showPage('events');renderEventPage();};document.getElementById('backFromEventsBtn').onclick=()=>showPage('catalog');document.getElementById('addEventBtn').onclick=addEvent;
+  document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);});
+  bindPref('q','q','input');bindPref('priorityFilter','priority');bindPref('colorFilter','color');bindPref('sort','sort');
+  document.getElementById('tagFilterToggle').onclick=()=>{const p=document.getElementById('tagFilterPanel');p.classList.toggle('hidden');renderTagFilters();};
+  document.getElementById('tagMatchMode').addEventListener('change',e=>{prefs.tagMode=e.target.value==='and'?'and':'or';savePrefs();renderAll();});
+  document.getElementById('untaggedOnly').addEventListener('change',e=>{prefs.untaggedOnly=e.target.checked;if(prefs.untaggedOnly)prefs.tagIds=[];savePrefs();renderAll();});
+  document.getElementById('clearTagFilter').onclick=()=>{prefs.tagIds=[];prefs.untaggedOnly=false;savePrefs();renderAll();};
+  document.getElementById('tagFilterChips').addEventListener('click',e=>{const b=e.target.closest('[data-filter-tag]');if(!b)return;const id=b.dataset.filterTag;prefs.untaggedOnly=false;const i=prefs.tagIds.indexOf(id);i>=0?prefs.tagIds.splice(i,1):prefs.tagIds.push(id);savePrefs();renderAll();});
+  document.getElementById('syncBtn').onclick=syncOfficial;document.getElementById('exportBtn').onclick=exportData;document.getElementById('importFile').onchange=e=>e.target.files[0]&&importData(e.target.files[0]);
+  document.getElementById('clearBtn').onclick=()=>{if(confirm('色・優先度・タグ・メモ・訪問済みをすべて初期化しますか？')){circles.forEach(c=>c.state=stateTemplate());save();renderAll();}};
+  document.getElementById('manageTagsBtn').onclick=()=>{showPage('tags');renderTagPage();};document.getElementById('backToCatalogBtn').onclick=()=>showPage('catalog');document.getElementById('addTagBtn').onclick=addTag;
   document.getElementById('newTagName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addTag();}});
-  document.getElementById('tagList').addEventListener('click',e=>{const item=e.target.closest('[data-tag]');if(!item)return;const name=item.dataset.tag;if(e.target.closest('[data-tag-action="rename"]'))renameTag(name);if(e.target.closest('[data-tag-action="delete"]'))deleteTag(name);});
-  document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const cardEl=e.target.closest('.card');if(!cardEl)return;const id=cardEl.dataset.id,act=b.dataset.action,val=b.dataset.value;if(act==='color')updateCircle(id,c=>c.state.color=val);if(act==='priority')updateCircle(id,c=>c.state.priority=val);if(act==='tag')updateCircle(id,c=>{const arr=c.state.tags||[];const i=arr.indexOf(val);i>=0?arr.splice(i,1):arr.push(val);c.state.tags=arr.filter(t=>tags.includes(t));});renderAll();});
+  document.getElementById('tagList').addEventListener('click',e=>{const item=e.target.closest('[data-tag-id]');if(!item)return;const id=item.dataset.tagId;if(e.target.closest('[data-tag-action="up"]'))moveTag(id,-1);if(e.target.closest('[data-tag-action="down"]'))moveTag(id,1);if(e.target.closest('[data-tag-action="rename"]'))renameTag(id);if(e.target.closest('[data-tag-action="delete"]'))deleteTag(id);});
+  document.getElementById('tagList').addEventListener('change',e=>{if(e.target.matches('select[data-tag-action="color"]')){const item=e.target.closest('[data-tag-id]');if(item)recolorTag(item.dataset.tagId,e.target.value);}});
+  document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const cardEl=e.target.closest('.card');if(!cardEl)return;const id=cardEl.dataset.id,act=b.dataset.action,val=b.dataset.value;if(act==='color')updateCircle(id,c=>c.state.color=val);if(act==='priority')updateCircle(id,c=>c.state.priority=val);if(act==='tag')updateCircle(id,c=>{const i=c.state.tags.indexOf(val);if(i>=0){c.state.tags.splice(i,1);delete c.state.tagMeta[val];}else{c.state.tags.push(val);c.state.tagMeta[val]={status:'confirmed',source:'manual',updatedAt:Date.now()};}});if(act==='accept-candidate')updateCircle(id,c=>{if(!c.state.tags.includes(val))c.state.tags.push(val);c.state.tagMeta[val]={status:'confirmed',source:'auto',updatedAt:Date.now()};c.state.tagCandidates=(c.state.tagCandidates||[]).filter(x=>x.tagId!==val);});renderAll();});
   document.addEventListener('change',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.action==='visited'){updateCircle(cardEl.dataset.id,c=>c.state.visited=e.target.checked);renderAll();return;}if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);return;}});
   document.addEventListener('input',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);}});
-  renderAll(); if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  renderAll();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 });</script></body></html>
