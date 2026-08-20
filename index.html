@@ -100,7 +100,7 @@ button.warn{background:#48281d;border-color:#7b5631}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。</div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v7</span></div>
   </section>
 
   <section id="eventPage" class="page hidden">
@@ -133,7 +133,7 @@ button.warn{background:#48281d;border-color:#7b5631}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-08-20-6';
+<script>const VERSION='2026-08-21-7';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const LS_TAGS='kemoket_shared_tags_v1';
@@ -179,25 +179,43 @@ function load(){
 }
 function cleanText(s=''){return String(s).replace(/\*\*/g,'').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim();}
 function cleanMd(s=''){return cleanText(String(s).replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1').replace(/\\\|/g,'|'));}
-function normalizeUrl(u=''){
+function getOfficialUrl(){return currentEvent()?.officialUrl||'';}
+function isOfficialPlaceholderUrl(url=''){
+  try{
+    const officialRaw=getOfficialUrl();
+    if(!officialRaw)return false;
+    const target=new URL(url,officialRaw);
+    const official=new URL(officialRaw,location.href);
+    const normPath=p=>(p||'/').replace(/\/+$/,'')||'/';
+    // 公式表の「リンクなし」は href="#"。Readerがこれを list.html 自身の
+    // 絶対URLへ展開するため、同じ公式リストページを指すURLはリンクなし扱いにする。
+    return target.origin===official.origin && normPath(target.pathname)===normPath(official.pathname);
+  }catch(e){return false;}
+}
+function normalizeUrl(u='',kind=''){
   u=String(u||'').trim().replace(/^['\"]|['\"]$/g,'').replace(/&amp;/g,'&');
   if(!u || u==='#' || u==='-' || u==='—' || u==='–' || u==='　' || /^javascript:/i.test(u)) return '';
   if(u.startsWith('//')) u='https:'+u;
-  try{
-    const absolute=new URL(u,OFFICIAL_URL).href;
-    if(/^https?:\/\//i.test(absolute)) return absolute;
-  }catch(e){}
   if(/^www\./i.test(u)) u='https://'+u;
   if(!/^https?:\/\//i.test(u) && /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(u)) u='https://'+u;
-  return /^https?:\/\//i.test(u)?u:'';
+  let absolute='';
+  try{absolute=new URL(u,getOfficialUrl()||location.href).href;}catch(e){return '';}
+  if(!/^https?:\/\//i.test(absolute) || isOfficialPlaceholderUrl(absolute)) return '';
+  try{
+    const host=new URL(absolute).hostname.toLowerCase();
+    // pixiv / tw は列の意味に合うドメインだけを採用し、Reader由来の誤リンクを防ぐ。
+    if(kind==='pixiv' && !(host==='pixiv.net'||host.endsWith('.pixiv.net'))) return '';
+    if(kind==='tw' && !(host==='x.com'||host.endsWith('.x.com')||host==='twitter.com'||host.endsWith('.twitter.com'))) return '';
+  }catch(e){return '';}
+  return absolute;
 }
-function extractUrl(cell=''){
+function extractUrl(cell='',kind=''){
   const text=String(cell||'').trim();
   if(!text) return '';
-  const md=[...text.matchAll(/\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)].map(m=>m[1]).find(x=>normalizeUrl(x));
-  if(md) return normalizeUrl(md);
+  const candidates=[...text.matchAll(/\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)].map(m=>m[1]);
+  for(const candidate of candidates){const url=normalizeUrl(candidate,kind);if(url)return url;}
   const plain=text.match(/(https?:\/\/[^\s|>\]）]+)/i) || text.match(/\b(www\.[^\s|>\]）]+)/i);
-  return normalizeUrl(plain?plain[1]:'');
+  return normalizeUrl(plain?plain[1]:'',kind);
 }
 function parseMeta(text=''){
   const src=String(text);
@@ -209,7 +227,7 @@ function parseMeta(text=''){
 function makeRow(space,name,rep,web,pixiv,tw){
   const s=cleanMd(space),n=cleanMd(name),r=cleanMd(rep);
   if(!/^[A-Z]-\d{2,3}$/.test(s)||!n) return null;
-  return {id:s+'::'+n,space:s,name:n,rep:r,web:extractUrl(web),pixiv:extractUrl(pixiv),tw:extractUrl(tw),state:stateTemplate()};
+  return {id:s+'::'+n,space:s,name:n,rep:r,web:extractUrl(web,'web'),pixiv:extractUrl(pixiv,'pixiv'),tw:extractUrl(tw,'tw'),state:stateTemplate()};
 }
 function parseOfficialMarkdown(md){
   const text=String(md||'').replace(/\r/g,'');
@@ -248,12 +266,12 @@ function parseOfficialHTML(html){
     if(cells.length<6) continue;
     const space=cleanText(cells[0].textContent),name=cleanText(cells[1].textContent),rep=cleanText(cells[2].textContent);
     if(!/^[A-Z]-\d{2,3}$/.test(space)||!name) continue;
-    const urlAt=i=>{
+    const urlAt=(i,kind)=>{
       const anchors=[...cells[i].querySelectorAll('a[href]')];
-      for(const a of anchors){const u=normalizeUrl(a.getAttribute('href')||'');if(u)return u;}
+      for(const a of anchors){const u=normalizeUrl(a.getAttribute('href')||'',kind);if(u)return u;}
       return '';
     };
-    const row={id:space+'::'+name,space,name,rep,web:urlAt(3),pixiv:urlAt(4),tw:urlAt(5),state:stateTemplate()};
+    const row={id:space+'::'+name,space,name,rep,web:urlAt(3,'web'),pixiv:urlAt(4,'pixiv'),tw:urlAt(5,'tw'),state:stateTemplate()};
     if(!seen.has(row.id)){seen.add(row.id);rows.push(row);}
   }
   return {rows,meta:parseMeta(doc.body?.innerText||html),format:'html'};
@@ -406,7 +424,7 @@ function setSyncMeta(text,kind=''){
   el.className='sync-meta '+kind; el.innerHTML=text;
 }
 function renderSyncMeta(){
-  if(!syncInfo){setSyncMeta(`未同期　｜　取得元：<a href="${OFFICIAL_URL}" target="_blank" rel="noopener">けもケット公式 list.html</a>`);return;}
+  if(!syncInfo){const official=getOfficialUrl();setSyncMeta(`未同期　｜　取得元：<a href="${esc(official)}" target="_blank" rel="noopener">けもケット公式 list.html</a>`);return;}
   const dt=new Date(syncInfo.syncedAt); const when=isNaN(dt)?'':dt.toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
   const upd=syncInfo.officialUpdated?`　公式更新 ${esc(syncInfo.officialUpdated)}`:'';
   const links=syncInfo.links?`　リンク：web ${syncInfo.links.web} / pixiv ${syncInfo.links.pixiv} / tw ${syncInfo.links.tw}`:'';
