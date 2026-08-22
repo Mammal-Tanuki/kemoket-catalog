@@ -63,7 +63,7 @@ button.warn{background:#48281d;border-color:#7b5631}
 .event-meta{font-size:12px;color:var(--muted);margin-top:3px;word-break:break-all}
 .event-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.event-actions button{padding:7px 8px;box-shadow:none}
 @media(min-width:760px){.toolbar{grid-template-columns:2fr 1fr 1fr 1fr}.toolbar.tight{grid-template-columns:repeat(4,1fr)} .toolbar .wide{grid-column:auto} .fields{grid-template-columns:1fr 120px}}
-</style></head><body>
+.details-toggle-row{display:flex;justify-content:flex-end;margin:6px 0 6px}.collapse-btn{min-width:44px;height:36px;padding:0 12px;display:grid;place-items:center;border-radius:12px;background:#141b26;border:1px solid #2a3444;box-shadow:none;font-weight:800;font-size:18px;line-height:1}.detail-hint{font-size:12px;color:var(--muted);margin:0 0 6px}.checkline{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#121721}.checkline input{width:18px;height:18px;margin-top:1px;flex:0 0 auto}.checktext b{display:block;margin-bottom:2px}.checktext span{font-size:12px;color:var(--muted);line-height:1.5}</style></head><body>
 <header>
   <div class="header-row">
     <h1>けもケット 個人カタログ</h1>
@@ -93,13 +93,14 @@ button.warn{background:#48281d;border-color:#7b5631}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v10</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v11</span></div>
   </section>
 
   <section id="eventPage" class="page hidden">
     <div class="panel">
       <div class="kv"><h2 style="margin:0">イベント管理</h2><button id="backFromEventsBtn">← 戻る</button></div>
-      <p class="note">今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・購入予定・予算・メモ・訪問済みを別々に保存します。</p>
+      <p class="note">今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・購入予定・予算・メモ・訪問済み・表示設定を別々に保存します。</p>
+      <label class="checkline"><input id="detailDefaultOpen" type="checkbox"><span class="checktext"><b>購入予定品・予算・メモを初期状態で展開する</b><span>オフの場合は折りたたみ状態で表示します。各サークルカード右上の ︿ / ﹀ で個別に開閉できます。</span></span></label>
       <div class="toolbar" style="margin-top:10px">
         <input id="newEventName" placeholder="イベント名（例：けもケット18）">
         <input id="newEventUrl" class="wide" value="https://skypalette.jp/kemoket/list.html" placeholder="公式サークルリストURL">
@@ -109,13 +110,13 @@ button.warn{background:#48281d;border-color:#7b5631}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-08-21-10';
+<script>const VERSION='2026-08-21-11';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const OBSOLETE_TAG_KEYS=['kemoket_tag_defs_v2','kemoket_shared_tags_v1'];
 const DEFAULT_EVENTS=[{id:'kemoket17',name:'けもケット17',officialUrl:'https://skypalette.jp/kemoket/list.html'}];
-const stateTemplate=()=>({color:'gray',item:'',budget:'',memo:'',visited:false,updatedAt:0});
-const defaultPrefs=()=>({q:'',color:'all',sort:'space'});
+const stateTemplate=()=>({color:'gray',item:'',budget:'',memo:'',visited:false,detailsOpen:null,updatedAt:0});
+const defaultPrefs=()=>({q:'',color:'all',sort:'space',detailDefaultOpen:false});
 let circles=[];
 let prefs=defaultPrefs();
 let syncInfo=null;
@@ -132,11 +133,12 @@ function normalizeState(st){
   const clean={...stateTemplate(),...(st||{})};
   delete clean.priority;
   delete clean.tags; delete clean.tagMeta; delete clean.tagCandidates;
+  if(typeof clean.detailsOpen!=='boolean') clean.detailsOpen=null;
   return clean;
 }
 function normalizePrefs(raw){
   raw=raw&&typeof raw==='object'?raw:{};
-  return {q:String(raw.q||''),color:['all','red','orange','yellow','green','blue','gray'].includes(raw.color)?raw.color:'all',sort:['space','name','unvisited'].includes(raw.sort)?raw.sort:'space'};
+  return {q:String(raw.q||''),color:['all','red','orange','yellow','green','blue','gray'].includes(raw.color)?raw.color:'all',sort:['space','name','unvisited'].includes(raw.sort)?raw.sort:'space',detailDefaultOpen:!!raw.detailDefaultOpen};
 }
 function removeObsoleteTagStorage(){
   for(const key of OBSOLETE_TAG_KEYS)localStorage.removeItem(key);
@@ -383,8 +385,10 @@ function linkSlot(url,kind){
   if(url)return `<a class="link-slot link-${kind}" href="${esc(url)}" target="_blank" rel="noopener"><span class="link-label">${label}</span><span class="link-mark">${icon}</span></a>`;
   return `<span class="link-slot off"><span class="link-label">${label}</span><span class="link-mark">${banSvg()}</span></span>`;
 }
+function isDetailsOpen(circle){return typeof circle.state.detailsOpen==='boolean'?circle.state.detailsOpen:!!prefs.detailDefaultOpen;}
 function card(c){
   const colors=[['red','赤'],['orange','橙'],['yellow','黄'],['green','緑'],['blue','青'],['gray','灰']];
+  const open=isDetailsOpen(c);
   return `<article class="card" data-id="${esc(c.id)}">
     <div class="card-top">
       <div class="space">${esc(c.space)}</div>
@@ -393,7 +397,8 @@ function card(c){
     </div>
     <div class="official-links">${linkSlot(c.web,'web')}${linkSlot(c.pixiv,'pixiv')}${linkSlot(c.tw,'tw')}</div>
     <div class="row">${colors.map(([k,l])=>`<button class="chip c-${k} ${c.state.color===k?'active':''}" data-action="color" data-value="${k}">${l}</button>`).join('')}</div>
-    <div class="fields">
+    <div class="details-toggle-row"><button class="collapse-btn" data-action="toggleDetails" aria-expanded="${open?'true':'false'}" aria-label="詳細欄を${open?'折りたたむ':'展開する'}">${open?'︿':'﹀'}</button></div>
+    <div class="fields ${open?'':'hidden'}">
       <input data-field="item" placeholder="購入予定品" value="${esc(c.state.item)}">
       <input data-field="budget" inputmode="numeric" placeholder="予算" value="${esc(c.state.budget)}">
       <textarea data-field="memo" placeholder="メモ">${esc(c.state.memo)}</textarea>
@@ -418,14 +423,15 @@ function renderStats(){
 }
 function renderFilters(){
   document.getElementById('q').value=prefs.q;document.getElementById('colorFilter').value=prefs.color;document.getElementById('sort').value=prefs.sort;
+  const cb=document.getElementById('detailDefaultOpen'); if(cb) cb.checked=!!prefs.detailDefaultOpen;
 }
 function renderList(){const a=filtered();document.getElementById('list').innerHTML=a.length?a.map(card).join(''):`<div class="empty">${circles.length?'条件に一致するサークルがありません':'まず「公式リスト同期」を押してください。'}</div>`;}
 function renderAll(){renderFilters();renderSyncMeta();renderStats();renderList();renderEventUI();}
 function updateCircle(id,fn){const c=circles.find(x=>x.id===id);if(!c)return;fn(c);c.state.updatedAt=Date.now();save();}
 function showPage(which){document.getElementById('catalogPage').classList.toggle('hidden',which!=='catalog');document.getElementById('eventPage').classList.toggle('hidden',which!=='events');}
 function bindPref(id,key,event='change'){document.getElementById(id).addEventListener(event,e=>{prefs[key]=e.target.value;savePrefs();renderAll();});}
-function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),event:ev,syncInfo,circles},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ev.id}_backup.json`;a.click();URL.revokeObjectURL(a.href);}
-function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state=normalizeState(c.state);});if(o.syncInfo)syncInfo=o.syncInfo;save();saveSync();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
+function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),event:ev,syncInfo,prefs,circles},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ev.id}_backup.json`;a.click();URL.revokeObjectURL(a.href);}
+function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state=normalizeState(c.state);});if(o.syncInfo)syncInfo=o.syncInfo;if(o.prefs)prefs=normalizePrefs(o.prefs);save();saveSync();savePrefs();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
 function renderEventUI(){
   const sel=document.getElementById('eventSelect');
   sel.innerHTML=events.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}</option>`).join('');
@@ -463,9 +469,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('manageEventsBtn').onclick=()=>{showPage('events');renderEventPage();};document.getElementById('backFromEventsBtn').onclick=()=>showPage('catalog');document.getElementById('addEventBtn').onclick=addEvent;
   document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);});
   bindPref('q','q','input');bindPref('colorFilter','color');bindPref('sort','sort');
+  document.getElementById('detailDefaultOpen').addEventListener('change',e=>{prefs.detailDefaultOpen=e.target.checked;savePrefs();renderAll();});
   document.getElementById('syncBtn').onclick=syncOfficial;document.getElementById('exportBtn').onclick=exportData;document.getElementById('importFile').onchange=e=>e.target.files[0]&&importData(e.target.files[0]);
   document.getElementById('clearBtn').onclick=()=>{if(confirm('色・購入予定・予算・メモ・訪問済みをすべて初期化しますか？')){circles.forEach(c=>c.state=stateTemplate());save();renderAll();}};
-  document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const cardEl=e.target.closest('.card');if(!cardEl)return;const id=cardEl.dataset.id,act=b.dataset.action,val=b.dataset.value;if(act==='color')updateCircle(id,c=>c.state.color=val);renderAll();});
+  document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const cardEl=e.target.closest('.card');if(!cardEl)return;const id=cardEl.dataset.id,act=b.dataset.action,val=b.dataset.value;if(act==='color')updateCircle(id,c=>c.state.color=val);if(act==='toggleDetails')updateCircle(id,c=>c.state.detailsOpen=!isDetailsOpen(c));renderAll();});
   document.addEventListener('change',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.action==='visited'){updateCircle(cardEl.dataset.id,c=>c.state.visited=e.target.checked);renderAll();return;}if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);return;}});
   document.addEventListener('input',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);}});
   renderAll();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
