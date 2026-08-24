@@ -94,7 +94,7 @@ button.warn{background:#48281d;border-color:#7b5631}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、イベントごとの形式を解析し、<b>配置 / サークル名 / 作家・代表 / 公式属性 / 各種リンク</b>を共通形式へ変換します。　<span class="small">app v14</span></div>
+    <div class="footer-help">公式リスト同期では、イベントごとの形式を解析し、<b>配置 / サークル名 / 作家・代表 / 公式属性 / 各種リンク</b>を共通形式へ変換します。　<span class="small">app v15</span></div>
   </section>
 
   <section id="eventPage" class="page hidden">
@@ -112,7 +112,7 @@ button.warn{background:#48281d;border-color:#7b5631}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-08-24-14';
+<script>const VERSION='2026-08-24-15';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const LS_APP_PREFS='kemoket_app_prefs_v1';
@@ -125,6 +125,8 @@ let circles=[];
 let prefs=defaultPrefs();
 let appPrefs=defaultAppPrefs();
 let syncInfo=null;
+let syncInProgress=false;
+let syncGeneration=0;
 let events=[];
 let currentEventId='kemoket17';
 let detailSessionOverrides=new Map();
@@ -355,32 +357,52 @@ function mergeOfficial(newRows){
   const liveUsed=new Set([...used].filter(x=>live.includes(x)));const removed=live.filter(c=>!liveUsed.has(c)).length;circles=merged;save();persistStateCacheFromCircles();return {preserved,added,removed,moved};
 }
 async function fetchWithTimeout(url,ms=25000,options={}){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:ctrl.signal,...options});if(!r.ok)throw new Error('HTTP '+r.status);return await r.text();}finally{clearTimeout(timer);}}
-async function fetchAndParseSource(sourceUrl){
-  const cacheBust=sourceUrl+(sourceUrl.includes('?')?'&':'?')+'_catalog_ts='+Date.now(),httpVariant=/^https:\/\//i.test(sourceUrl)?sourceUrl.replace(/^https:/i,'http:'):'';const attempts=[
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+function sourceAttemptList(sourceUrl,round=1){
+  const nonce=Date.now().toString(36)+'_'+round+'_'+Math.random().toString(36).slice(2,8),cacheBust=sourceUrl+(sourceUrl.includes('?')?'&':'?')+'_catalog_ts='+encodeURIComponent(nonce),httpVariant=/^https:\/\//i.test(sourceUrl)?sourceUrl.replace(/^https:/i,'http:'):'';
+  return [
     {label:'Reader 全文Markdown',url:'https://r.jina.ai/'+sourceUrl,options:{headers:{'X-Respond-With':'markdown','X-Retain-Links':'all','X-No-Cache':'true'}},ms:25000},
     ...(httpVariant?[{label:'Reader 全文Markdown/HTTP',url:'https://r.jina.ai/'+httpVariant,options:{headers:{'X-Respond-With':'markdown','X-Retain-Links':'all','X-No-Cache':'true'}},ms:25000}]:[]),
-    {label:'Reader 通常',url:'https://r.jina.ai/'+sourceUrl,options:{},ms:25000},
+    {label:'Reader 通常',url:'https://r.jina.ai/'+sourceUrl,options:{headers:{'X-No-Cache':'true'}},ms:25000},
     {label:'公式ページ直接',url:cacheBust,options:{},ms:20000},
-    {label:'AllOrigins JSON',url:'https://api.allorigins.win/get?url='+encodeURIComponent(cacheBust),options:{},ms:18000}
+    {label:'AllOrigins JSON',url:'https://api.allorigins.win/get?url='+encodeURIComponent(cacheBust),options:{},ms:20000},
+    {label:'AllOrigins raw',url:'https://api.allorigins.win/raw?url='+encodeURIComponent(cacheBust),options:{},ms:20000}
   ];
-  setSyncMeta(`${esc(new URL(sourceUrl).hostname)}：複数経路を照合中…`,'working');
-  const settled=await Promise.all(attempts.map(async a=>{try{const text=await fetchWithTimeout(a.url,a.ms,a.options);const parsed=validateParsed(parseGenericPayload(text,sourceUrl));return {ok:true,label:a.label,parsed};}catch(e){return {ok:false,label:a.label,error:e.name==='AbortError'?'タイムアウト':String(e.message||e)};}}));
-  const good=settled.filter(x=>x.ok);if(!good.length)throw new Error(settled.map(x=>`${x.label}: ${x.error}`).join(' / '));
-  good.sort((a,b)=>b.parsed.score-a.parsed.score);const best=good[0],counts=uniq(good.map(x=>x.parsed.rows.length)).sort((a,b)=>a-b),warnings=[];
+}
+async function runSourceRound(sourceUrl,round,totalRounds){
+  const host=new URL(sourceUrl).hostname,retryText=round>1?`　再試行 ${round-1}/${totalRounds-1}`:'';setSyncMeta(`${esc(host)}：複数経路を照合中…${retryText}`,'working');
+  const attempts=sourceAttemptList(sourceUrl,round);
+  return await Promise.all(attempts.map(async a=>{try{const text=await fetchWithTimeout(a.url,a.ms,a.options);const parsed=validateParsed(parseGenericPayload(text,sourceUrl));return {ok:true,label:a.label,round,parsed};}catch(e){return {ok:false,label:a.label,round,error:e.name==='AbortError'?'タイムアウト':String(e.message||e)};}}));
+}
+async function fetchAndParseSource(sourceUrl){
+  const totalRounds=3,delays=[0,900,2200],history=[];let good=[];
+  for(let round=1;round<=totalRounds;round++){
+    if(round>1)await sleep(delays[round-1]);
+    const settled=await runSourceRound(sourceUrl,round,totalRounds);history.push(...settled);good=settled.filter(x=>x.ok);
+    if(good.length)break;
+  }
+  if(!good.length){const lastByMethod=new Map();for(const x of history)lastByMethod.set(x.label,x);throw new Error(`自動再試行 ${totalRounds}回後も取得できませんでした。\n`+[...lastByMethod.values()].map(x=>`${x.label}: ${x.error}`).join(' / '));}
+  good.sort((a,b)=>b.parsed.score-a.parsed.score);const best=good[0],allGood=history.filter(x=>x.ok),counts=uniq(allGood.map(x=>x.parsed.rows.length)).sort((a,b)=>a-b),warnings=[];
+  if(best.round>1)warnings.push(`一時的な取得失敗から自動再試行 ${best.round-1}回で復旧`);
   if(counts.length>1){const lo=counts[0],hi=counts[counts.length-1];if(hi>=Math.max(lo+10,lo*1.05))warnings.push(`取得経路で件数差 ${lo}～${hi}件。最も完全性の高い結果（${best.parsed.rows.length}件）を採用`);}
   if(best.parsed.meta.expectedCount&&best.parsed.rows.length!==best.parsed.meta.expectedCount)warnings.push(`公式記載 ${best.parsed.meta.expectedCount}件に対し取得 ${best.parsed.rows.length}件`);
   if(best.parsed.rows.length>=500&&!best.parsed.completeSignal)warnings.push('大規模一覧の末尾を確認できない取得結果です。途中で切れている可能性があります');
   if(best.parsed.rows.length>=1000&&parserReliability(best.parsed.formats)<80)warnings.push('大規模一覧を簡易形式で解析したため、末尾まで取得できたか要確認');
-  return {...best.parsed,method:best.label,warnings,attempts:settled.map(x=>x.ok?{method:x.label,count:x.parsed.rows.length,formats:x.parsed.formats,score:x.parsed.score}:{method:x.label,error:x.error})};
+  return {...best.parsed,method:best.label,retryCount:best.round-1,warnings,attempts:history.map(x=>x.ok?{method:x.label,round:x.round,count:x.parsed.rows.length,formats:x.parsed.formats,score:x.parsed.score}:{method:x.label,round:x.round,error:x.error})};
 }
 async function syncOfficial(){
-  const btn=document.getElementById('syncBtn'),sources=getSources();if(!sources.length)return alert('イベント管理でサークルリストURLを登録してください。');btn.disabled=true;btn.textContent='公式を確認中…';setSyncMeta('サークルリストを解析しています…','working');let merged=[],results=[],failures=[],allWarnings=[],rawTotal=0;
-  for(const sourceUrl of sources){try{const p=await fetchAndParseSource(sourceUrl);rawTotal+=p.rows.length;merged=mergeCircleSet(merged,p.rows);results.push({url:sourceUrl,count:p.rows.length,formats:p.formats,method:p.method,officialUpdated:p.meta.officialUpdated||'',warnings:p.warnings||[],attempts:p.attempts||[]});allWarnings.push(...(p.warnings||[]).map(w=>`${new URL(sourceUrl).hostname}: ${w}`));}catch(e){failures.push({url:sourceUrl,error:String(e.message||e)});}}
-  if(!merged.length){btn.disabled=false;btn.textContent='公式リスト同期';setSyncMeta('同期できませんでした。既存データは変更していません。','error');alert('サークルリストの同期に失敗しました。\n既存データは上書きしていません。\n\n'+failures.map(x=>`${x.url}\n${x.error}`).join('\n\n'));return;}
-  const duplicateMerged=Math.max(0,rawTotal-merged.length),changes=mergeOfficial(merged);syncInfo={syncedAt:new Date().toISOString(),actualCount:merged.length,rawTotal,duplicateMerged,sourceCount:sources.length,successCount:results.length,results,failures,warnings:allWarnings,changes};saveSync();renderAll();btn.disabled=false;btn.textContent='公式リスト同期';
-  const details=results.map((r,i)=>`情報源${i+1}: ${r.count}件 / ${r.method}${r.formats?.length?' / '+r.formats.join('+'):''}`).join('\n');
-  const warn=[...(failures.length?[`${failures.length}件の情報源は取得失敗（成功した情報源だけで統合）`]:[]),...allWarnings];const warnText=warn.length?'\n\n⚠ '+warn.join('\n⚠ '):'';
-  alert(`サークルリスト同期完了\n最終 ${merged.length} サークル\n情報源 ${results.length}/${sources.length} 成功\n${details}${sources.length>1?`\n重複統合 ${duplicateMerged}件`:''}\n既存チェック引継ぎ ${changes.preserved}件${warnText}`);
+  if(syncInProgress)return;const btn=document.getElementById('syncBtn'),resetBtn=document.getElementById('resetSyncBtn'),sources=getSources();if(!sources.length)return alert('イベント管理でサークルリストURLを登録してください。');const generation=++syncGeneration;syncInProgress=true;btn.disabled=true;if(resetBtn)resetBtn.disabled=true;btn.textContent='公式を確認中…';setSyncMeta('サークルリストを解析しています…','working');let merged=[],results=[],failures=[],allWarnings=[],rawTotal=0;
+  try{
+    for(const sourceUrl of sources){if(generation!==syncGeneration)return;try{const p=await fetchAndParseSource(sourceUrl);if(generation!==syncGeneration)return;rawTotal+=p.rows.length;merged=mergeCircleSet(merged,p.rows);results.push({url:sourceUrl,count:p.rows.length,formats:p.formats,method:p.method,retryCount:p.retryCount||0,officialUpdated:p.meta.officialUpdated||'',warnings:p.warnings||[],attempts:p.attempts||[]});allWarnings.push(...(p.warnings||[]).map(w=>`${new URL(sourceUrl).hostname}: ${w}`));}catch(e){failures.push({url:sourceUrl,error:String(e.message||e)});}}
+    if(generation!==syncGeneration)return;
+    if(!merged.length){setSyncMeta('同期できませんでした。次回の再同期は新しい取得として実行できます。既存データは変更していません。','error');alert('サークルリストの同期に失敗しました。\n既存データは上書きしていません。\n\n自動再試行を行いましたが取得できませんでした。次の「公式リスト同期」は状態を引きずらず最初から再試行します。\n\n'+failures.map(x=>`${x.url}\n${x.error}`).join('\n\n'));return;}
+    const duplicateMerged=Math.max(0,rawTotal-merged.length),changes=mergeOfficial(merged);syncInfo={syncedAt:new Date().toISOString(),actualCount:merged.length,rawTotal,duplicateMerged,sourceCount:sources.length,successCount:results.length,results,failures,warnings:allWarnings,changes};saveSync();renderAll();
+    const details=results.map((r,i)=>`情報源${i+1}: ${r.count}件 / ${r.method}${r.retryCount?` / 自動再試行${r.retryCount}回`:''}${r.formats?.length?' / '+r.formats.join('+'):''}`).join('\n');
+    const warn=[...(failures.length?[`${failures.length}件の情報源は取得失敗（成功した情報源だけで統合）`]:[]),...allWarnings];const warnText=warn.length?'\n\n⚠ '+warn.join('\n⚠ '):'';
+    alert(`サークルリスト同期完了\n最終 ${merged.length} サークル\n情報源 ${results.length}/${sources.length} 成功\n${details}${sources.length>1?`\n重複統合 ${duplicateMerged}件`:''}\n既存チェック引継ぎ ${changes.preserved}件${warnText}`);
+  }finally{
+    if(generation===syncGeneration){syncInProgress=false;btn.disabled=false;if(resetBtn)resetBtn.disabled=false;btn.textContent='公式リスト同期';}
+  }
 }
 function spaceKey(s){return normalizeSpace(s);}
 function filtered(){let a=circles.filter(c=>{const q=prefs.q.trim().toLowerCase();const hit=!q||[c.space,c.name,c.rep,c.description,(c.attributes||[]).join(' '),c.state.item,c.state.memo].join(' ').toLowerCase().includes(q);const cc=prefs.color==='all'||c.state.color===prefs.color;return hit&&cc;});if(prefs.sort==='space')a.sort((x,y)=>compareSpace(x.space,y.space));if(prefs.sort==='name')a.sort((x,y)=>x.name.localeCompare(y.name,'ja'));if(prefs.sort==='unvisited')a.sort((x,y)=>Number(x.state.visited)-Number(y.state.visited)||compareSpace(x.space,y.space));return a;}
@@ -421,7 +443,7 @@ function deleteEvent(id){const ev=events.find(e=>e.id===id);if(!ev||events.lengt
 function resetSyncedContent(){
   const ev=currentEvent();if(!ev)return;if(!circles.length&&!syncInfo)return alert('このイベントには削除する同期内容がありません。');
   if(!confirm(`「${ev.name}」の同期内容を削除しますか？\n\n削除するもの：公式から取得したサークル一覧・同期結果\n保持するもの：イベントURL、色、購入予定品、予算、メモ、訪問済み\n\n保持したチェックは同じサークルを再同期すると復元します。`))return;
-  persistStateCacheFromCircles();circles=[];syncInfo=null;save();localStorage.removeItem(eventKey('sync'));resetDetailSessionToDefault();renderAll();alert('同期内容を削除しました。\n個人チェックは再同期用に保持しています。');
+  syncGeneration++;syncInProgress=false;persistStateCacheFromCircles();circles=[];syncInfo=null;save();localStorage.removeItem(eventKey('sync'));resetDetailSessionToDefault();renderAll();alert('同期内容を削除しました。\n個人チェックは再同期用に保持しています。\n次回の同期は通信・解析状態を引き継がず、新しい取得として開始します。');
 }
 
 window.addEventListener('DOMContentLoaded',()=>{load();
