@@ -70,6 +70,7 @@ button.warn{background:#48281d;border-color:#7b5631}
 .danger-pair button{width:100%;box-shadow:var(--shadow)}
 button.sync-delete{background:#3a2020;border-color:#714046}
 .status-checks{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:58px;margin-left:auto}.status-check{display:flex;align-items:center;justify-content:flex-end;gap:4px;color:var(--muted);font-size:10px;white-space:nowrap}.status-check input{width:17px;height:17px;margin:0}.review-reset-row{display:flex;justify-content:flex-end;margin-top:8px}.review-reset-row button{box-shadow:none;background:#302526;border-color:#624046;font-size:12px;padding:7px 9px}
+.catalog-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}.catalog-filter-grid .wide{grid-column:1/-1}.review-filter-wrap.hidden,.checklist-panel.hidden,.checklist-sort-wrap.hidden{display:none!important}.checklist-panel{margin:-1px 0 8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#121721}.checklist-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.checklist-panel-title{font-size:11px;color:var(--muted);font-weight:700}.checklist-colors{display:flex;gap:6px;flex-wrap:wrap}.color-toggle{min-width:40px;padding:6px 10px;border-radius:999px;font-size:11px;box-shadow:none;opacity:.42;position:relative}.color-toggle.active{opacity:1;outline:2px solid #fff;outline-offset:1px}.color-toggle.active:after{content:'✓';font-size:9px;margin-left:4px}.checklist-help{margin-top:6px;font-size:10px;color:var(--muted);line-height:1.4}
 @media(min-width:760px){.danger-pair{grid-column:auto;display:contents}.toolbar.tight button{font-size:14px}}
 </style></head><body>
 <header>
@@ -83,14 +84,39 @@ button.sync-delete{background:#3a2020;border-color:#714046}
       <select id="eventSelect" aria-label="イベント選択"></select>
       <button id="manageEventsBtn">イベント管理</button>
     </div>
-    <div class="toolbar">
+    <div class="catalog-filter-grid">
       <input id="q" class="wide" type="search" placeholder="サークル名・配置・代表者・メモを検索">
-      <select id="colorFilter">
-        <option value="all">色：全部</option><option value="red">赤</option><option value="orange">橙</option><option value="yellow">黄</option><option value="green">緑</option><option value="blue">青</option><option value="gray">灰</option>
+      <select id="viewMode" aria-label="表示対象">
+        <option value="all">表示対象：全サークル</option>
+        <option value="checklist">表示対象：チェックリスト</option>
       </select>
-      <select id="sort">
-        <option value="space">配置順</option><option value="name">サークル名順</option><option value="unvisited">未訪問優先</option>
-      </select>
+      <div id="reviewFilterWrap" class="review-filter-wrap">
+        <select id="reviewFilter" aria-label="確認状況">
+          <option value="all">確認状況：すべて</option>
+          <option value="reviewed">確認済み</option>
+          <option value="unreviewed">未確認</option>
+        </select>
+      </div>
+      <div id="checklistSortWrap" class="checklist-sort-wrap hidden">
+        <select id="checklistSort" aria-label="チェックリストの並び替え">
+          <option value="space">並び替え：配置順</option>
+          <option value="color">並び替え：色順</option>
+          <option value="colorVisited">並び替え：色 → 訪問状況</option>
+          <option value="visited">並び替え：訪問状況順</option>
+          <option value="visitedColor">並び替え：訪問状況 → 色</option>
+        </select>
+      </div>
+    </div>
+    <div id="checklistPanel" class="checklist-panel hidden">
+      <div class="checklist-panel-head"><span class="checklist-panel-title">チェックリストに表示する色</span><span class="small">灰色は対象外</span></div>
+      <div class="checklist-colors" id="checklistColors">
+        <button type="button" class="color-toggle c-red" data-check-color="red">赤</button>
+        <button type="button" class="color-toggle c-orange" data-check-color="orange">橙</button>
+        <button type="button" class="color-toggle c-yellow" data-check-color="yellow">黄</button>
+        <button type="button" class="color-toggle c-green" data-check-color="green">緑</button>
+        <button type="button" class="color-toggle c-blue" data-check-color="blue">青</button>
+      </div>
+      <div class="checklist-help">色順：赤 → 橙 → 黄 → 緑 → 青 ／ 訪問状況順：未訪問 → 訪問済み</div>
     </div>
     <div class="toolbar tight">
       <button class="primary" id="syncBtn">公式リスト同期</button>
@@ -104,7 +130,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v12R3</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別に絞り込めます。　<span class="small">app v12R4</span></div>
   </section>
 
   <section id="eventPage" class="page hidden">
@@ -123,13 +149,13 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-08-24-12R3';
+<script>const VERSION='2026-08-25-12R4';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const OBSOLETE_TAG_KEYS=['kemoket_tag_defs_v2','kemoket_shared_tags_v1'];
 const DEFAULT_EVENTS=[{id:'kemoket17',name:'けもケット17',officialUrl:'https://skypalette.jp/kemoket/list.html'}];
 const stateTemplate=()=>({color:'gray',reviewed:false,item:'',budget:'',memo:'',visited:false,updatedAt:0});
-const defaultPrefs=()=>({q:'',color:'all',sort:'space',detailDefaultOpen:false,showReviewedCheck:true});
+const defaultPrefs=()=>({q:'',viewMode:'all',reviewFilter:'all',checklistColors:['red','orange','yellow','green','blue'],checklistSort:'space',detailDefaultOpen:false,showReviewedCheck:true});
 let circles=[];
 let prefs=defaultPrefs();
 let syncInfo=null;
@@ -170,7 +196,7 @@ function normalizeState(st){
 }
 function normalizePrefs(raw){
   raw=raw&&typeof raw==='object'?raw:{};
-  return {q:String(raw.q||''),color:['all','red','orange','yellow','green','blue','gray'].includes(raw.color)?raw.color:'all',sort:['space','name','unvisited'].includes(raw.sort)?raw.sort:'space',detailDefaultOpen:!!raw.detailDefaultOpen,showReviewedCheck:raw.showReviewedCheck!==false};
+  const allowedColors=['red','orange','yellow','green','blue'];const selected=Array.isArray(raw.checklistColors)?raw.checklistColors.filter(x=>allowedColors.includes(x)):allowedColors.slice();return {q:String(raw.q||''),viewMode:['all','checklist'].includes(raw.viewMode)?raw.viewMode:'all',reviewFilter:['all','reviewed','unreviewed'].includes(raw.reviewFilter)?raw.reviewFilter:'all',checklistColors:[...new Set(selected)],checklistSort:['space','color','colorVisited','visited','visitedColor'].includes(raw.checklistSort)?raw.checklistSort:'space',detailDefaultOpen:!!raw.detailDefaultOpen,showReviewedCheck:raw.showReviewedCheck!==false};
 }
 function removeObsoleteTagStorage(){
   for(const key of OBSOLETE_TAG_KEYS)localStorage.removeItem(key);
@@ -408,18 +434,25 @@ async function syncOfficial(){
   setSyncMeta('同期できませんでした。既存データは変更していません。','error');
   alert('公式リストの同期に失敗しました。\n既存データは上書きしていません。\n\n'+errors.join('\n')+'\n\n※Readerの「応答先頭」が表示された場合、その部分が原因特定に使えます。');
 }
-function score(c){return ({red:6,orange:5,yellow:4,green:3,blue:2,gray:1}[c.state.color]||0);}
+function score(c){return ({red:5,orange:4,yellow:3,green:2,blue:1,gray:0}[c.state.color]??0);}
+function checklistColorRank(c){return ({red:0,orange:1,yellow:2,green:3,blue:4}[c.state.color]??99);}
 function spaceKey(s){const m=(s||'').match(/^([A-Z])-(\d+)$/); return m?m[1]+String(m[2]).padStart(3,'0'):s||'';}
+function compareSpace(x,y){return spaceKey(x.space).localeCompare(spaceKey(y.space),'ja');}
+function compareVisited(x,y){return Number(!!x.state.visited)-Number(!!y.state.visited);}
 function filtered(){
   let a=circles.filter(c=>{
     const q=prefs.q.trim().toLowerCase();
     const hit=!q || [c.space,c.name,c.rep,c.state.item,c.state.memo].join(' ').toLowerCase().includes(q);
-    const cc=prefs.color==='all'||c.state.color===prefs.color;
-    return hit&&cc;
+    const reviewOk=!prefs.showReviewedCheck||prefs.reviewFilter==='all'||(prefs.reviewFilter==='reviewed'&&!!c.state.reviewed)||(prefs.reviewFilter==='unreviewed'&&!c.state.reviewed);
+    const listOk=prefs.viewMode!=='checklist'||(c.state.color!=='gray'&&prefs.checklistColors.includes(c.state.color));
+    return hit&&reviewOk&&listOk;
   });
-  if(prefs.sort==='space') a.sort((x,y)=>spaceKey(x.space).localeCompare(spaceKey(y.space),'ja'));
-  if(prefs.sort==='name') a.sort((x,y)=>x.name.localeCompare(y.name,'ja'));
-  if(prefs.sort==='unvisited') a.sort((x,y)=>Number(x.state.visited)-Number(y.state.visited)||score(y)-score(x));
+  if(prefs.viewMode!=='checklist'){a.sort(compareSpace);return a;}
+  if(prefs.checklistSort==='space')a.sort(compareSpace);
+  if(prefs.checklistSort==='color')a.sort((x,y)=>checklistColorRank(x)-checklistColorRank(y)||compareSpace(x,y));
+  if(prefs.checklistSort==='colorVisited')a.sort((x,y)=>checklistColorRank(x)-checklistColorRank(y)||compareVisited(x,y)||compareSpace(x,y));
+  if(prefs.checklistSort==='visited')a.sort((x,y)=>compareVisited(x,y)||compareSpace(x,y));
+  if(prefs.checklistSort==='visitedColor')a.sort((x,y)=>compareVisited(x,y)||checklistColorRank(x)-checklistColorRank(y)||compareSpace(x,y));
   return a;
 }
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -471,15 +504,23 @@ function renderSyncMeta(){
   setSyncMeta(`✓ ${syncInfo.actualCount}/${syncInfo.expectedCount}サークル同期済み　${esc(when)}${upd}${links}`,'ok');
 }
 function renderStats(){
-  const a=filtered(); const counts={reviewed:0,visited:0};
-  circles.forEach(c=>{if(c.state.reviewed)counts.reviewed++;if(c.state.visited)counts.visited++;});
-  const items=[`全 ${circles.length}`,`表示 ${a.length}`];
+  const a=filtered(); const counts={reviewed:0,visited:0,checklist:0};
+  circles.forEach(c=>{if(c.state.reviewed)counts.reviewed++;if(c.state.visited)counts.visited++;if(c.state.color!=='gray')counts.checklist++;});
+  const items=[`全 ${circles.length}`,`表示 ${a.length}`,`チェックリスト ${counts.checklist}`];
   if(prefs.showReviewedCheck)items.push(`確認済 ${counts.reviewed}`);
   items.push(`訪問済 ${counts.visited}`);
   document.getElementById('stats').innerHTML=items.map(x=>`<div class="stat">${x}</div>`).join('');
 }
 function renderFilters(){
-  document.getElementById('q').value=prefs.q;document.getElementById('colorFilter').value=prefs.color;document.getElementById('sort').value=prefs.sort;
+  document.getElementById('q').value=prefs.q;
+  document.getElementById('viewMode').value=prefs.viewMode;
+  document.getElementById('reviewFilter').value=prefs.reviewFilter;
+  document.getElementById('checklistSort').value=prefs.checklistSort;
+  const reviewWrap=document.getElementById('reviewFilterWrap');if(reviewWrap)reviewWrap.classList.toggle('hidden',!prefs.showReviewedCheck);
+  const checklist=prefs.viewMode==='checklist';
+  const checklistPanel=document.getElementById('checklistPanel');if(checklistPanel)checklistPanel.classList.toggle('hidden',!checklist);
+  const sortWrap=document.getElementById('checklistSortWrap');if(sortWrap)sortWrap.classList.toggle('hidden',!checklist);
+  document.querySelectorAll('[data-check-color]').forEach(b=>{const active=prefs.checklistColors.includes(b.dataset.checkColor);b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const cb=document.getElementById('detailDefaultOpen'); if(cb) cb.checked=!!prefs.detailDefaultOpen;
   const rc=document.getElementById('showReviewedCheck'); if(rc) rc.checked=!!prefs.showReviewedCheck;
 }
@@ -546,13 +587,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('eventSelect').addEventListener('change',e=>switchEvent(e.target.value));
   document.getElementById('manageEventsBtn').onclick=()=>{showPage('events');renderEventPage();};document.getElementById('backFromEventsBtn').onclick=()=>showPage('catalog');document.getElementById('addEventBtn').onclick=addEvent;
   document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);});
-  bindPref('q','q','input');bindPref('colorFilter','color');bindPref('sort','sort');
+  bindPref('q','q','input');bindPref('viewMode','viewMode');bindPref('reviewFilter','reviewFilter');bindPref('checklistSort','checklistSort');
   document.getElementById('detailDefaultOpen').addEventListener('change',e=>{prefs.detailDefaultOpen=e.target.checked;savePrefs();resetDetailSessionToDefault();renderAll();});
-  document.getElementById('showReviewedCheck').addEventListener('change',e=>{prefs.showReviewedCheck=e.target.checked;savePrefs();renderAll();});
+  document.getElementById('showReviewedCheck').addEventListener('change',e=>{prefs.showReviewedCheck=e.target.checked;if(!prefs.showReviewedCheck)prefs.reviewFilter='all';savePrefs();renderAll();});
   document.getElementById('clearReviewedBtn').onclick=clearReviewedChecks;
   document.getElementById('syncBtn').onclick=syncOfficial;document.getElementById('exportBtn').onclick=exportData;document.getElementById('importFile').onchange=e=>e.target.files[0]&&importData(e.target.files[0]);
   document.getElementById('clearBtn').onclick=()=>{if(confirm('色・購入予定品・予算・メモ・訪問済みをすべて初期化しますか？\n\n「確認済み」はこの操作では変更しません。')){circles.forEach(c=>{const reviewed=!!c.state.reviewed;c.state=stateTemplate();c.state.reviewed=reviewed;});const detached=loadDetachedChecks();if(detached.length){for(const x of detached){const reviewed=!!x.state?.reviewed;x.state=stateTemplate();x.state.reviewed=reviewed;}localStorage.setItem(detachedKey(),JSON.stringify(detached));}save();renderAll();}};
   document.getElementById('deleteSyncBtn').onclick=deleteSyncContents;
+  document.getElementById('checklistColors').addEventListener('click',e=>{const b=e.target.closest('[data-check-color]');if(!b)return;const color=b.dataset.checkColor;const set=new Set(prefs.checklistColors);if(set.has(color))set.delete(color);else set.add(color);prefs.checklistColors=['red','orange','yellow','green','blue'].filter(x=>set.has(x));savePrefs();renderAll();});
   document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const cardEl=e.target.closest('.card');if(!cardEl)return;const id=cardEl.dataset.id,act=b.dataset.action,val=b.dataset.value;
     if(act==='toggleDetails'){
       const c=circles.find(x=>x.id===id);if(!c)return;
