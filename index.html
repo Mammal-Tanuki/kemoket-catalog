@@ -69,6 +69,7 @@ button.warn{background:#48281d;border-color:#7b5631}
 .danger-pair{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .danger-pair button{width:100%;box-shadow:var(--shadow)}
 button.sync-delete{background:#3a2020;border-color:#714046}
+.status-checks{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:58px;margin-left:auto}.status-check{display:flex;align-items:center;justify-content:flex-end;gap:4px;color:var(--muted);font-size:10px;white-space:nowrap}.status-check input{width:17px;height:17px;margin:0}.review-reset-row{display:flex;justify-content:flex-end;margin-top:8px}.review-reset-row button{box-shadow:none;background:#302526;border-color:#624046;font-size:12px;padding:7px 9px}
 @media(min-width:760px){.danger-pair{grid-column:auto;display:contents}.toolbar.tight button{font-size:14px}}
 </style></head><body>
 <header>
@@ -103,14 +104,16 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v12R2</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。リンクなしは灰色の🚫表示です。　<span class="small">app v12R3</span></div>
   </section>
 
   <section id="eventPage" class="page hidden">
     <div class="panel">
       <div class="kv"><h2 style="margin:0">イベント管理</h2><button id="backFromEventsBtn">← 戻る</button></div>
-      <p class="note">けもケット専用版です。今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・購入予定・予算・メモ・訪問済み・表示設定を別々に保存します。</p>
+      <p class="note">けもケット専用版です。今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・確認済み・購入予定・予算・メモ・訪問済み・表示設定を別々に保存します。</p>
       <label class="checkline"><input id="detailDefaultOpen" type="checkbox"><span class="checktext"><b>購入予定品・予算・メモを初期状態で展開する</b><span>オフの場合は折りたたみ状態で起動します。個別の開閉はその起動中だけ有効で、次回起動時はこの設定に戻ります。</span></span></label>
+      <label class="checkline"><input id="showReviewedCheck" type="checkbox"><span class="checktext"><b>「確認済み」チェックを表示する</b><span>サークルを事前に確認したかを記録する専用チェックです。色・訪問済みとは独立しています。オフにしても保存済みの確認状態は消えません。</span></span></label>
+      <div class="review-reset-row"><button class="warn" id="clearReviewedBtn">確認済みを全初期化</button></div>
       <div class="toolbar" style="margin-top:10px">
         <input id="newEventName" placeholder="イベント名（例：けもケット18）">
         <input id="newEventUrl" class="wide" value="https://skypalette.jp/kemoket/list.html" placeholder="公式サークルリストURL">
@@ -120,13 +123,13 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-08-24-12R2';
+<script>const VERSION='2026-08-24-12R3';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const OBSOLETE_TAG_KEYS=['kemoket_tag_defs_v2','kemoket_shared_tags_v1'];
 const DEFAULT_EVENTS=[{id:'kemoket17',name:'けもケット17',officialUrl:'https://skypalette.jp/kemoket/list.html'}];
-const stateTemplate=()=>({color:'gray',item:'',budget:'',memo:'',visited:false,updatedAt:0});
-const defaultPrefs=()=>({q:'',color:'all',sort:'space',detailDefaultOpen:false});
+const stateTemplate=()=>({color:'gray',reviewed:false,item:'',budget:'',memo:'',visited:false,updatedAt:0});
+const defaultPrefs=()=>({q:'',color:'all',sort:'space',detailDefaultOpen:false,showReviewedCheck:true});
 let circles=[];
 let prefs=defaultPrefs();
 let syncInfo=null;
@@ -167,7 +170,7 @@ function normalizeState(st){
 }
 function normalizePrefs(raw){
   raw=raw&&typeof raw==='object'?raw:{};
-  return {q:String(raw.q||''),color:['all','red','orange','yellow','green','blue','gray'].includes(raw.color)?raw.color:'all',sort:['space','name','unvisited'].includes(raw.sort)?raw.sort:'space',detailDefaultOpen:!!raw.detailDefaultOpen};
+  return {q:String(raw.q||''),color:['all','red','orange','yellow','green','blue','gray'].includes(raw.color)?raw.color:'all',sort:['space','name','unvisited'].includes(raw.sort)?raw.sort:'space',detailDefaultOpen:!!raw.detailDefaultOpen,showReviewedCheck:raw.showReviewedCheck!==false};
 }
 function removeObsoleteTagStorage(){
   for(const key of OBSOLETE_TAG_KEYS)localStorage.removeItem(key);
@@ -441,7 +444,10 @@ function card(c){
     <div class="card-top">
       <div class="space">${esc(c.space)}</div>
       <div style="flex:1"><div class="name">${esc(c.name)}</div><div class="rep">代表：${esc(c.rep||'—')}</div></div>
-      <label class="small"><input type="checkbox" data-action="visited" ${c.state.visited?'checked':''}> 済</label>
+      <div class="status-checks">
+        ${prefs.showReviewedCheck?`<label class="status-check"><input type="checkbox" data-action="reviewed" ${c.state.reviewed?'checked':''}>確認</label>`:''}
+        <label class="status-check"><input type="checkbox" data-action="visited" ${c.state.visited?'checked':''}>訪問</label>
+      </div>
     </div>
     <div class="official-links">${linkSlot(c.web,'web')}${linkSlot(c.pixiv,'pixiv')}${linkSlot(c.tw,'tw')}</div>
     <div class="row">${colors.map(([k,l])=>`<button class="chip c-${k} ${c.state.color===k?'active':''}" data-action="color" data-value="${k}">${l}</button>`).join('')}</div>
@@ -465,13 +471,17 @@ function renderSyncMeta(){
   setSyncMeta(`✓ ${syncInfo.actualCount}/${syncInfo.expectedCount}サークル同期済み　${esc(when)}${upd}${links}`,'ok');
 }
 function renderStats(){
-  const a=filtered(); const counts={visited:0};
-  circles.forEach(c=>{if(c.state.visited)counts.visited++;});
-  document.getElementById('stats').innerHTML=[`全 ${circles.length}`,`表示 ${a.length}`,`訪問済 ${counts.visited}`].map(x=>`<div class="stat">${x}</div>`).join('');
+  const a=filtered(); const counts={reviewed:0,visited:0};
+  circles.forEach(c=>{if(c.state.reviewed)counts.reviewed++;if(c.state.visited)counts.visited++;});
+  const items=[`全 ${circles.length}`,`表示 ${a.length}`];
+  if(prefs.showReviewedCheck)items.push(`確認済 ${counts.reviewed}`);
+  items.push(`訪問済 ${counts.visited}`);
+  document.getElementById('stats').innerHTML=items.map(x=>`<div class="stat">${x}</div>`).join('');
 }
 function renderFilters(){
   document.getElementById('q').value=prefs.q;document.getElementById('colorFilter').value=prefs.color;document.getElementById('sort').value=prefs.sort;
   const cb=document.getElementById('detailDefaultOpen'); if(cb) cb.checked=!!prefs.detailDefaultOpen;
+  const rc=document.getElementById('showReviewedCheck'); if(rc) rc.checked=!!prefs.showReviewedCheck;
 }
 function renderList(){const a=filtered();document.getElementById('list').innerHTML=a.length?a.map(card).join(''):`<div class="empty">${circles.length?'条件に一致するサークルがありません':'まず「公式リスト同期」を押してください。'}</div>`;}
 function renderAll(){renderFilters();renderSyncMeta();renderStats();renderList();renderEventUI();}
@@ -482,7 +492,7 @@ function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringif
 function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state=normalizeState(c.state);});if(o.syncInfo)syncInfo=o.syncInfo;if(o.prefs)prefs=normalizePrefs(o.prefs);save();saveSync();savePrefs();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
 function deleteSyncContents(){
   if(!circles.length&&!syncInfo){alert('削除する同期内容はありません。');return;}
-  if(!confirm('現在の公式サークル一覧と同期結果を削除しますか？\n\n色・購入予定品・予算・メモ・訪問済みは退避し、同じサークルを再同期したときに引き継ぎます。'))return;
+  if(!confirm('現在の公式サークル一覧と同期結果を削除しますか？\n\n色・確認済み・購入予定品・予算・メモ・訪問済みは退避し、同じサークルを再同期したときに引き継ぎます。'))return;
   saveDetachedChecksFromCircles();
   circles=[];
   syncInfo=null;
@@ -490,6 +500,15 @@ function deleteSyncContents(){
   resetDetailSessionToDefault();
   renderAll();
   setSyncMeta('同期内容を削除しました。個人チェックは退避済みです。再同期すると引き継ぎます。');
+}
+function clearReviewedChecks(){
+  const any=circles.some(c=>c.state&&c.state.reviewed)||loadDetachedChecks().some(x=>x.state&&x.state.reviewed);
+  if(!any){alert('初期化する「確認済み」はありません。');return;}
+  if(!confirm('「確認済み」だけをすべて未確認へ戻しますか？\n\n色・購入予定品・予算・メモ・訪問済みは変更しません。'))return;
+  circles.forEach(c=>{c.state=normalizeState(c.state);c.state.reviewed=false;c.state.updatedAt=Date.now();});
+  const detached=loadDetachedChecks();
+  if(detached.length){for(const x of detached){x.state=normalizeState(x.state);x.state.reviewed=false;}localStorage.setItem(detachedKey(),JSON.stringify(detached));}
+  save();renderAll();
 }
 function renderEventUI(){
   const sel=document.getElementById('eventSelect');
@@ -529,8 +548,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);});
   bindPref('q','q','input');bindPref('colorFilter','color');bindPref('sort','sort');
   document.getElementById('detailDefaultOpen').addEventListener('change',e=>{prefs.detailDefaultOpen=e.target.checked;savePrefs();resetDetailSessionToDefault();renderAll();});
+  document.getElementById('showReviewedCheck').addEventListener('change',e=>{prefs.showReviewedCheck=e.target.checked;savePrefs();renderAll();});
+  document.getElementById('clearReviewedBtn').onclick=clearReviewedChecks;
   document.getElementById('syncBtn').onclick=syncOfficial;document.getElementById('exportBtn').onclick=exportData;document.getElementById('importFile').onchange=e=>e.target.files[0]&&importData(e.target.files[0]);
-  document.getElementById('clearBtn').onclick=()=>{if(confirm('色・購入予定・予算・メモ・訪問済みをすべて初期化しますか？')){circles.forEach(c=>c.state=stateTemplate());clearDetachedChecks();save();renderAll();}};
+  document.getElementById('clearBtn').onclick=()=>{if(confirm('色・購入予定品・予算・メモ・訪問済みをすべて初期化しますか？\n\n「確認済み」はこの操作では変更しません。')){circles.forEach(c=>{const reviewed=!!c.state.reviewed;c.state=stateTemplate();c.state.reviewed=reviewed;});const detached=loadDetachedChecks();if(detached.length){for(const x of detached){const reviewed=!!x.state?.reviewed;x.state=stateTemplate();x.state.reviewed=reviewed;}localStorage.setItem(detachedKey(),JSON.stringify(detached));}save();renderAll();}};
   document.getElementById('deleteSyncBtn').onclick=deleteSyncContents;
   document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const cardEl=e.target.closest('.card');if(!cardEl)return;const id=cardEl.dataset.id,act=b.dataset.action,val=b.dataset.value;
     if(act==='toggleDetails'){
@@ -546,7 +567,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
     if(act==='color'){updateCircle(id,c=>c.state.color=val);renderAll();}
   });
-  document.addEventListener('change',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.action==='visited'){updateCircle(cardEl.dataset.id,c=>c.state.visited=e.target.checked);renderAll();return;}if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);return;}});
+  document.addEventListener('change',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.action==='reviewed'){updateCircle(cardEl.dataset.id,c=>c.state.reviewed=e.target.checked);renderAll();return;}if(cardEl&&e.target.dataset.action==='visited'){updateCircle(cardEl.dataset.id,c=>c.state.visited=e.target.checked);renderAll();return;}if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);return;}});
   document.addEventListener('input',e=>{const cardEl=e.target.closest('.card');if(cardEl&&e.target.dataset.field){const f=e.target.dataset.field;updateCircle(cardEl.dataset.id,c=>c.state[f]=e.target.value);}});
   renderAll();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 });</script></body></html>
