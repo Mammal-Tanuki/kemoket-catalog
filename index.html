@@ -85,6 +85,8 @@ button.sync-delete{background:#3a2020;border-color:#714046}
 .map-profile-summary{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:8px}.map-profile-summary b{color:var(--text)}
 .map-dialog{border:1px solid var(--line);border-radius:18px;background:#20232a;color:var(--text);padding:0;width:min(92vw,420px);box-shadow:0 24px 70px rgba(0,0,0,.6)}.map-dialog::backdrop{background:rgba(0,0,0,.62)}.map-dialog-body{padding:15px}.map-dialog-space{font-size:13px;color:var(--accent);font-weight:900}.map-dialog-name{font-size:20px;font-weight:900;margin:3px 0 2px}.map-dialog-rep{color:var(--muted);font-size:12px}.map-dialog-state{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.map-state-pill{padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#151920;font-size:11px}.map-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.map-dialog-actions button{box-shadow:none}.map-dialog-color{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:4px}
 .map-event-tools{margin-top:7px;padding-top:7px;border-top:1px dashed #303744}.map-event-status{font-size:11px;color:var(--muted);margin-bottom:6px}.map-event-actions{display:flex;gap:6px;flex-wrap:wrap}.map-event-actions button{font-size:11px;padding:6px 8px;box-shadow:none}.map-event-actions .danger{background:#382023;border-color:#684047}.map-file-note{font-size:10px;color:var(--muted);line-height:1.4;margin-top:5px}
+
+.map-ocr-dialog{border:1px solid var(--line);border-radius:18px;background:#20232a;color:var(--text);padding:0;width:min(92vw,480px);box-shadow:0 24px 70px rgba(0,0,0,.65)}.map-ocr-dialog::backdrop{background:rgba(0,0,0,.7)}.map-ocr-body{padding:16px}.map-ocr-title{font-size:18px;font-weight:900;margin-bottom:8px}.map-ocr-status{font-size:12px;line-height:1.55;color:var(--muted);min-height:3.2em}.map-ocr-progress{width:100%;height:10px;margin:10px 0;accent-color:#5fb8e8}.map-ocr-note{font-size:10px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:8px}.map-auto-badge{display:inline-block;margin-left:5px;padding:2px 5px;border:1px solid #3a596a;border-radius:999px;color:#9ddcff;font-size:9px}.map-event-actions .map-auto{background:#153346;border-color:#39799a}.map-event-actions .map-export{background:#183524;border-color:#3f7551}
 @media(max-width:520px){.eventbar{grid-template-columns:1fr 1fr}.eventbar select{grid-column:1/-1}.eventbar #mapBtn,.eventbar #manageEventsBtn{width:100%}.map-toolbar{align-items:stretch}.map-view-tabs{width:100%}.map-zoom-controls{margin-left:0;width:100%;justify-content:flex-end}}
 
 </style></head><body>
@@ -146,7 +148,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別件数つきで絞り込めます。会場マップはイベント別のマップ定義JSONを後から読み込めます。　<span class="small">app v12R6</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別件数つきで絞り込めます。会場マップは会場全体図1枚（JPG/PNG）から端末内で配置を自動解析し、イベント別のマップ定義JSONを生成できます。　<span class="small">app v12R8</span></div>
   </section>
 
 
@@ -158,8 +160,8 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     <div id="mapProfileSummary" class="map-profile-summary"></div>
     <div id="mapEmpty" class="panel map-empty hidden">
       <b>このイベントには会場マップが登録されていません</b>
-      <div class="note">マップ画像と各配置番号の座標は、イベントごとの「マップ定義JSON」として別途読み込みます。アプリ本体はAI解析を行わず、解析済みの定義だけを表示します。</div>
-      <button id="openMapSettingsBtn">イベント管理でマップ定義を読み込む</button>
+      <div class="note">会場全体図1枚（JPG/PNG）をイベント管理から選ぶと、この端末内でOCR解析し、同期済みの配置番号と照合してマップ定義JSONを自動生成します。左右半分などの補助図は読み込みません。解析済みJSONを直接読み込むこともできます。</div>
+      <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap"><button id="autoMapEmptyBtn" class="primary">会場全体図を自動解析</button><button id="openMapSettingsBtn">イベント管理</button></div>
     </div>
     <div id="mapReady" class="hidden">
       <div class="map-toolbar">
@@ -198,10 +200,19 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
   </dialog>
 
+  <dialog id="mapOcrDialog" class="map-ocr-dialog">
+    <div class="map-ocr-body">
+      <div class="map-ocr-title">会場マップを解析中</div>
+      <div id="mapOcrStatus" class="map-ocr-status">準備しています…</div>
+      <progress id="mapOcrProgress" class="map-ocr-progress" max="1" value="0"></progress>
+      <div class="map-ocr-note">画像は外部AIへ送信しません。OCR処理はこの端末内で実行します。初回のみOCRエンジン・英数字認識データをインターネットから取得します。画像によっては数十秒〜数分かかる場合があります。</div>
+    </div>
+  </dialog>
+
   <section id="eventPage" class="page hidden">
     <div class="panel">
       <div class="kv"><h2 style="margin:0">イベント管理</h2><button id="backFromEventsBtn">← 戻る</button></div>
-      <p class="note">けもケット専用版です。今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・確認済み・購入予定・予算・メモ・訪問済み・表示設定を別々に保存します。会場マップはイベントごとの解析済み「マップ定義JSON」を後から読み込む方式です。</p>
+      <p class="note">けもケット専用版です。今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・確認済み・購入予定・予算・メモ・訪問済み・表示設定を別々に保存します。会場マップは会場全体図1枚を端末内でOCR解析して配置座標を作ることも、既存のマップ定義JSONを読み込むこともできます。</p>
       <label class="checkline"><input id="detailDefaultOpen" type="checkbox"><span class="checktext"><b>購入予定品・予算・メモを初期状態で展開する</b><span>オフの場合は折りたたみ状態で起動します。個別の開閉はその起動中だけ有効で、次回起動時はこの設定に戻ります。</span></span></label>
       <label class="checkline"><input id="showReviewedCheck" type="checkbox"><span class="checktext"><b>「確認済み」チェックを表示する</b><span>サークルを事前に確認したかを記録する専用チェックです。色・訪問済みとは独立しています。オフにしても保存済みの確認状態は消えません。</span></span></label>
       <div class="review-reset-row"><button class="warn" id="clearReviewedBtn">確認済みを全初期化</button></div>
@@ -214,7 +225,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-09-01-12R6';
+<script>const VERSION='2026-09-01-12R8';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const OBSOLETE_TAG_KEYS=['kemoket_tag_defs_v2','kemoket_shared_tags_v1'];
@@ -254,7 +265,7 @@ function normalizeMapProfile(raw){
   if(!views.length)return null;
   const viewIds=new Set(views.map(v=>v.id));
   const spots=Array.isArray(raw.spots)?raw.spots.map(s=>({space:cleanText(s.space||''),viewId:String(s.viewId||s.view||'').trim(),x:Number(s.x),y:Number(s.y),w:Number(s.w),h:Number(s.h)})).filter(s=>s.space&&viewIds.has(s.viewId)&&[s.x,s.y,s.w,s.h].every(Number.isFinite)&&s.x>=0&&s.y>=0&&s.w>0&&s.h>0&&s.x+s.w<=1.02&&s.y+s.h<=1.02):[];
-  return {schema:MAP_SCHEMA,eventId:String(raw.eventId||''),eventName:String(raw.eventName||''),generatedAt:String(raw.generatedAt||''),views,spots};
+  return {schema:MAP_SCHEMA,eventId:String(raw.eventId||''),eventName:String(raw.eventName||''),generatedAt:String(raw.generatedAt||''),views,spots,analysis:raw.analysis&&typeof raw.analysis==='object'?raw.analysis:null};
 }
 // v13-v15の汎用イベント形式(sources[])から、v12の単一公式URL形式へ安全に戻す。
 // データは削除せず、先頭URLのみを officialUrl として引き継ぐ。
@@ -646,7 +657,13 @@ function renderEventUI(){
 }
 function renderEventPage(){
   const el=document.getElementById('eventList'); if(!el)return;
-  el.innerHTML=events.map(e=>{const mp=loadMapProfileFor(e.id);const mapStatus=mp?`マップ ${mp.views.length}図 / 座標 ${mp.spots.length}件`:'マップ未登録';return `<div class="event-item" data-event-id="${esc(e.id)}"><div><b>${esc(e.name)}</b>${e.id===currentEventId?' <span class="small">（使用中）</span>':''}<div class="event-meta">${esc(e.officialUrl)}</div><div class="map-event-tools"><div class="map-event-status">${esc(mapStatus)}</div><div class="map-event-actions"><button data-event-action="mapImport">マップ定義読込</button>${mp?'<button data-event-action="mapDelete" class="danger">マップ定義削除</button>':''}</div><div class="map-file-note">JSON内の画像URLと配置座標を使用します。マップ画像そのものはアプリへ埋め込みません。</div></div></div><div class="event-actions"><button data-event-action="rename">名前変更</button>${events.length>1?'<button class="warn" data-event-action="delete">削除</button>':''}</div></div>`;}).join('');
+  el.innerHTML=events.map(e=>{
+    const mp=loadMapProfileFor(e.id);
+    const auto=mp?.analysis?.method==='local-ocr-v1';
+    const coverage=mp?.analysis?.matchedUnique!=null?` / 対応 ${mp.analysis.matchedUnique}件`:'';
+    const mapStatus=mp?`マップ ${mp.views.length}図 / 座標 ${mp.spots.length}件${coverage}${auto?' <span class="map-auto-badge">端末自動解析</span>':''}`:'マップ未登録';
+    return `<div class="event-item" data-event-id="${esc(e.id)}"><div><b>${esc(e.name)}</b>${e.id===currentEventId?' <span class="small">（使用中）</span>':''}<div class="event-meta">${esc(e.officialUrl)}</div><div class="map-event-tools"><div class="map-event-status">${mapStatus}</div><div class="map-event-actions"><button class="map-auto" data-event-action="mapAuto">会場全体図を自動解析</button><button data-event-action="mapImport">JSON読込</button>${mp?'<button class="map-export" data-event-action="mapExport">JSON書出し</button><button data-event-action="mapDelete" class="danger">マップ削除</button>':''}</div><div class="map-file-note">自動解析は会場全体図1枚だけを対象に、同期済みの配置番号を正解候補として画像内の英字ラベルと番号の位置を端末内OCRで照合します。左右半分などの補助図は使用しません。精度は会場図の形式に左右されるため試験機能です。</div></div></div><div class="event-actions"><button data-event-action="rename">名前変更</button>${events.length>1?'<button class="warn" data-event-action="delete">削除</button>':''}</div></div>`;
+  }).join('');
 }
 function switchEvent(id){
   if(id===currentEventId)return; save();savePrefs();saveSync(); resetDetailSessionToDefault(); currentEventId=id; saveEvents();
@@ -683,7 +700,7 @@ function renderMapPage(){
   empty.classList.add('hidden');ready.classList.remove('hidden');
   if(!mapProfile.views.some(v=>v.id===mapViewId))mapViewId=mapProfile.views[0].id;
   const mappedSpaces=new Set(mapProfile.spots.map(s=>cleanText(s.space).toUpperCase()));const circleMapped=circles.filter(c=>mappedSpaces.has(cleanText(c.space).toUpperCase())).length;
-  sum.innerHTML=`<b>${esc(currentEvent()?.name||'')}</b>　${mapProfile.views.length}図 / 座標 ${mapProfile.spots.length}件 / 一覧と対応 ${circleMapped}サークル`;
+  const autoNote=String(mapProfile.analysis?.method||'').startsWith('local-ocr')?` / 自動解析 ${mapProfile.analysis.matchedUnique||circleMapped}/${mapProfile.analysis.expectedSpaces||circles.length}`:'';sum.innerHTML=`<b>${esc(currentEvent()?.name||'')}</b>　${mapProfile.views.length}図 / 座標 ${mapProfile.spots.length}件 / 一覧と対応 ${circleMapped}サークル${autoNote}`;
   document.getElementById('mapViewTabs').innerHTML=mapProfile.views.map(v=>`<button class="map-view-btn ${v.id===mapViewId?'active':''}" data-map-view="${esc(v.id)}">${esc(v.label)}</button>`).join('');
   renderMapColorControls();renderMapStage();
 }
@@ -707,12 +724,103 @@ function openMapSpot(index){const s=mapSpotsForView()[Number(index)];if(!s)retur
 function openMapCircleInList(){const c=circles.find(x=>x.id===mapDialogCircleId);if(!c)return;document.getElementById('mapSpotDialog').close();showPage('catalog');prefs.viewMode='all';prefs.reviewFilter='all';prefs.q=c.space;savePrefs();renderAll();requestAnimationFrame(()=>{document.querySelector(`.card[data-id="${CSS.escape(c.id)}"]`)?.scrollIntoView({behavior:'smooth',block:'center'});});}
 function importMapProfileFile(eventId,file){const fr=new FileReader();fr.onload=()=>{try{const raw=JSON.parse(fr.result),mp=normalizeMapProfile(raw);if(!mp)throw new Error('invalid');if(mp.eventId&&mp.eventId!==eventId&&!confirm(`このマップ定義の eventId は「${mp.eventId}」です。\n現在のイベント「${eventId}」へ読み込みますか？`))return;saveMapProfileFor(eventId,mp);if(eventId===currentEventId){mapProfile=mp;mapViewId=mp.views[0]?.id||'';mapZoom=1;}renderEventPage();alert(`マップ定義を読み込みました。\n${mp.views.length}図 / 座標 ${mp.spots.length}件`);}catch(e){alert('読み込めないマップ定義JSONです。\n schema / views / spots を確認してください。');}};fr.readAsText(file);}
 function chooseMapProfileFile(eventId){const input=document.createElement('input');input.type='file';input.accept='application/json,.json';input.onchange=()=>input.files?.[0]&&importMapProfileFile(eventId,input.files[0]);input.click();}
+
+const TESSERACT_JS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';
+let mapOcrWorker=null;
+function eventCirclesFor(id){
+  if(id===currentEventId)return circles;
+  try{const arr=JSON.parse(localStorage.getItem(`kemoket_event_${id}_circles_v1`)||'[]');return Array.isArray(arr)?arr:[];}catch(e){return [];}
+}
+function parseKemoketSpace(space){
+  const t=String(space||'').normalize('NFKC').toUpperCase().replace(/\s+/g,'').replace(/[‐‑‒–—―ー]/g,'-');
+  const m=t.match(/^([A-Z])[-]?0*(\d{1,2})$/);if(!m)return null;
+  const n=Number(m[2]);if(!Number.isFinite(n)||n<1||n>99)return null;
+  return {letter:m[1],num:n,canonical:`${m[1]}-${String(n).padStart(2,'0')}`};
+}
+function inferMapViewName(file,index,total){
+  const n=String(file?.name||'').toLowerCase();
+  if(/(?:^|[_-])d1\b|right|右/.test(n))return {id:'right',label:'右半分'};
+  if(/(?:^|[_-])d2\b|left|左/.test(n))return {id:'left',label:'左半分'};
+  if(/map[_-]?d(?:\.|$)|all|full|全体/.test(n))return {id:'all',label:'全体'};
+  return {id:`view${index+1}`,label:total===1?'会場図':`会場図${index+1}`};
+}
+function readFileDataURL(file){return new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result||''));fr.onerror=reject;fr.readAsDataURL(file);});}
+async function imageInfoAndOcrCanvas(file){
+  const bitmap=await createImageBitmap(file);const ow=bitmap.width,oh=bitmap.height;
+  const targetMax=Math.max(2200,Math.min(3000,Math.max(ow,oh)*1.8));
+  const scale=Math.max(1,Math.min(2.4,targetMax/Math.max(ow,oh)));const w=Math.round(ow*scale),h=Math.round(oh*scale);
+  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(bitmap,0,0,w,h);bitmap.close?.();
+  const img=ctx.getImageData(0,0,w,h),d=img.data;
+  for(let i=0;i<d.length;i+=4){const g=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);const v=Math.max(0,Math.min(255,Math.round((g-128)*1.55+128)));d[i]=d[i+1]=d[i+2]=v;}
+  ctx.putImageData(img,0,0);return {canvas,originalWidth:ow,originalHeight:oh};
+}
+function ensureTesseractLoaded(){
+  if(window.Tesseract?.createWorker)return Promise.resolve();
+  return new Promise((resolve,reject)=>{const existing=document.querySelector('script[data-kemoket-tesseract]');if(existing){existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=TESSERACT_JS_URL;sc.async=true;sc.dataset.kemoketTesseract='1';sc.onload=resolve;sc.onerror=()=>reject(new Error('OCRライブラリを読み込めませんでした'));document.head.appendChild(sc);});
+}
+function setMapOcrProgress(text,value){const d=document.getElementById('mapOcrDialog'),st=document.getElementById('mapOcrStatus'),p=document.getElementById('mapOcrProgress');if(st)st.textContent=text;if(p&&Number.isFinite(value))p.value=Math.max(0,Math.min(1,value));if(d&&!d.open)d.showModal();}
+function closeMapOcrProgress(){const d=document.getElementById('mapOcrDialog');if(d?.open)d.close();}
+function parseTsvWords(tsv){
+  const out=[];for(const line of String(tsv||'').split(/\r?\n/)){const c=line.split('\t');if(c.length<12||c[0]!=='5')continue;const conf=Number(c[10]),text=String(c.slice(11).join('\t')||'').trim();if(!text||!Number.isFinite(conf)||conf<18)continue;const left=Number(c[6]),top=Number(c[7]),width=Number(c[8]),height=Number(c[9]);if([left,top,width,height].every(Number.isFinite)&&width>0&&height>0)out.push({text,conf,left,top,width,height,cx:left+width/2,cy:top+height/2});}return out;
+}
+function normalizeOcrToken(text){return String(text||'').normalize('NFKC').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function buildSpotsFromOcr(words,viewId,imgW,imgH,expectedSpaces){
+  const expected=new Map();for(const sp of expectedSpaces){const p=parseKemoketSpace(sp);if(p)expected.set(p.canonical,p);}
+  const letters=[];const nums=[];
+  for(const w of words){const t=normalizeOcrToken(w.text);if(/^[A-S]$/.test(t))letters.push({...w,letter:t});else{const tn=t.replace(/^O(?=\d)|(?<=\d)O$/g,'0');if(/^\d{1,2}$/.test(tn)){const n=Number(tn);if(n>=1&&n<=99)nums.push({...w,num:n});}}}
+  if(!letters.length||!nums.length)return {spots:[],letters:letters.length,numbers:nums.length};
+  const bySpace=new Map();
+  for(const n of nums){
+    const ranked=letters.map(a=>{const dx=(n.cx-a.cx)/imgW,dy=(n.cy-a.cy)/imgH;return {a,d:Math.hypot(dx,dy)};}).sort((x,y)=>x.d-y.d);
+    let chosen=null;
+    for(const r of ranked.slice(0,6)){const key=`${r.a.letter}-${String(n.num).padStart(2,'0')}`;if(expected.has(key)){chosen={key,anchor:r.a,d:r.d};break;}}
+    if(!chosen||chosen.d>.32)continue;
+    const minW=Math.max(n.width,16),minH=Math.max(n.height,16);let x=(n.cx-minW*.72)/imgW,y=(n.cy-minH*.72)/imgH,w=(minW*1.44)/imgW,h=(minH*1.44)/imgH;x=Math.max(0,x);y=Math.max(0,y);w=Math.min(w,1-x);h=Math.min(h,1-y);
+    const score=(n.conf||0)+Math.min(35,n.height*1.6)-chosen.d*70;
+    const spot={space:chosen.key,viewId,x,y,w,h,_score:score};const prev=bySpace.get(chosen.key);if(!prev||spot._score>prev._score)bySpace.set(chosen.key,spot);
+  }
+  return {spots:[...bySpace.values()].map(({_score,...x})=>x),letters:letters.length,numbers:nums.length};
+}
+async function createMapOcrWorker(){
+  await ensureTesseractLoaded();
+  const worker=await Tesseract.createWorker('eng',1,{logger:m=>{if(m?.status==='recognizing text'&&Number.isFinite(m.progress))setMapOcrProgress(`文字を認識中… ${Math.round(m.progress*100)}%`,m.progress);}});
+  await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});return worker;
+}
+async function autoAnalyzeMapImage(eventId,file){
+  const ev=events.find(e=>e.id===eventId);const ec=eventCirclesFor(eventId);const expected=[...new Set(ec.map(c=>parseKemoketSpace(c.space)?.canonical).filter(Boolean))];
+  if(!expected.length){alert('先にこのイベントの「公式リスト同期」を行ってください。\n同期済みの配置番号を正解候補として画像解析します。');return;}
+  if(!file||!(/^image\/(?:jpeg|png|webp)$/i.test(file.type)||/\.(?:jpe?g|png|webp)$/i.test(file.name))){alert('会場全体図のJPG / PNG / WebPを1枚選択してください。');return;}
+  if(!confirm(`選択した1枚を「会場全体図」として、この端末内で自動解析します。\n\n・同期済み配置：${expected.length}件\n・左右半分などの補助図は使用しません\n・初回はOCRエンジンをネットから取得します\n・画像自体は外部AIへ送信しません\n\n開始しますか？`))return;
+  let worker=null;try{
+    setMapOcrProgress('OCRエンジンを準備しています…',0);worker=await createMapOcrWorker();mapOcrWorker=worker;
+    setMapOcrProgress('会場全体図を準備しています…',0);
+    const [src,prep]=await Promise.all([readFileDataURL(file),imageInfoAndOcrCanvas(file)]);
+    setMapOcrProgress('会場全体図の文字を解析しています…',0);
+    const ret=await worker.recognize(prep.canvas,{}, {text:false,tsv:true});
+    const words=parseTsvWords(ret.data.tsv);
+    const built=buildSpotsFromOcr(words,'all',prep.canvas.width,prep.canvas.height,expected);
+    const views=[{id:'all',label:'全体',src,width:prep.originalWidth,height:prep.originalHeight}];
+    const spots=built.spots;
+    const unique=new Set(spots.map(x=>x.space));
+    const missing=expected.filter(x=>!unique.has(x));
+    const profile={schema:MAP_SCHEMA,eventId,eventName:ev?.name||eventId,generatedAt:new Date().toISOString(),views,spots,analysis:{method:'local-ocr-overview-v1',sourceMode:'single-overview-image',expectedSpaces:expected.length,matchedUnique:unique.size,spotCount:spots.length,missingSpaces:missing,views:[{viewId:'all',label:'全体',spots:spots.length,letters:built.letters,numbers:built.numbers}]}};
+    saveMapProfileFor(eventId,profile);if(eventId===currentEventId){mapProfile=profile;mapViewId='all';mapZoom=1;}renderEventPage();
+    const rate=expected.length?Math.round(unique.size/expected.length*100):0;
+    const missingText=missing.length?`\n未検出：${missing.length}件（例：${missing.slice(0,12).join('、')}${missing.length>12?'…':''}）`:'\n未検出：0件';
+    alert(`端末内マップ解析が完了しました。\n\n会場図：1枚（全体図）\n生成座標：${spots.length}件\n同期済み配置との対応：${unique.size}/${expected.length}件（${rate}%）${missingText}\n\n自動解析結果なので、会場マップ画面で位置を確認してください。必要なら「JSON書出し」でmap.jsonとして保存できます。`);
+  }catch(e){console.error(e);alert(`マップの自動解析に失敗しました。\n${e?.message||e}\n\n通信状態を確認して再試行してください。選択した画像は外部へ送信されません。`);}finally{try{await worker?.terminate();}catch(_){}mapOcrWorker=null;closeMapOcrProgress();}
+}
+function chooseMapImageForAutoAnalysis(eventId){const input=document.createElement('input');input.type='file';input.accept='image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';input.multiple=false;input.onchange=()=>input.files?.[0]&&autoAnalyzeMapImage(eventId,input.files[0]);input.click();}
+function exportMapProfile(eventId){const mp=loadMapProfileFor(eventId);if(!mp)return;const ev=events.find(e=>e.id===eventId);const blob=new Blob([JSON.stringify(mp,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${String(ev?.name||eventId).replace(/[\\/:*?\"<>|]/g,'_')}_map.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+
 function deleteMapProfile(eventId){const ev=events.find(e=>e.id===eventId);const mp=loadMapProfileFor(eventId);if(!mp)return;if(!confirm(`「${ev?.name||eventId}」のマップ定義を削除しますか？\nサークル一覧や色・メモ等は削除しません。`))return;saveMapProfileFor(eventId,null);if(eventId===currentEventId){mapProfile=null;mapViewId='';mapZoom=1;}renderEventPage();}
 
 window.addEventListener('DOMContentLoaded',()=>{
   load();
   document.getElementById('mapBtn').onclick=()=>{showPage('map');renderMapPage();};
   document.getElementById('backFromMapBtn').onclick=()=>showPage('catalog');
+  document.getElementById('autoMapEmptyBtn').onclick=()=>chooseMapImageForAutoAnalysis(currentEventId);
   document.getElementById('openMapSettingsBtn').onclick=()=>{showPage('events');renderEventPage();};
   document.getElementById('mapZoomOutBtn').onclick=()=>setMapZoom(mapZoom-.25);
   document.getElementById('mapZoomInBtn').onclick=()=>setMapZoom(mapZoom+.25);
@@ -725,7 +833,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('mapStage').addEventListener('keydown',e=>{const r=e.target.closest('[data-map-spot]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openMapSpot(r.dataset.mapSpot);}});
   document.getElementById('eventSelect').addEventListener('change',e=>switchEvent(e.target.value));
   document.getElementById('manageEventsBtn').onclick=()=>{showPage('events');renderEventPage();};document.getElementById('backFromEventsBtn').onclick=()=>showPage('catalog');document.getElementById('addEventBtn').onclick=addEvent;
-  document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);if(e.target.closest('[data-event-action="mapImport"]'))chooseMapProfileFile(id);if(e.target.closest('[data-event-action="mapDelete"]'))deleteMapProfile(id);});
+  document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);if(e.target.closest('[data-event-action="mapAuto"]'))chooseMapImageForAutoAnalysis(id);if(e.target.closest('[data-event-action="mapImport"]'))chooseMapProfileFile(id);if(e.target.closest('[data-event-action="mapExport"]'))exportMapProfile(id);if(e.target.closest('[data-event-action="mapDelete"]'))deleteMapProfile(id);});
   bindPref('q','q','input');bindPref('viewMode','viewMode');bindPref('reviewFilter','reviewFilter');bindPref('checklistSort','checklistSort');
   document.getElementById('detailDefaultOpen').addEventListener('change',e=>{prefs.detailDefaultOpen=e.target.checked;savePrefs();resetDetailSessionToDefault();renderAll();});
   document.getElementById('showReviewedCheck').addEventListener('change',e=>{prefs.showReviewedCheck=e.target.checked;if(!prefs.showReviewedCheck)prefs.reviewFilter='all';savePrefs();renderAll();});
