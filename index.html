@@ -70,7 +70,7 @@ button.warn{background:#48281d;border-color:#7b5631}
 .danger-pair button{width:100%;box-shadow:var(--shadow)}
 button.sync-delete{background:#3a2020;border-color:#714046}
 .status-checks{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:58px;margin-left:auto}.status-check{display:flex;align-items:center;justify-content:flex-end;gap:4px;color:var(--muted);font-size:10px;white-space:nowrap}.status-check input{width:17px;height:17px;margin:0}.review-reset-row{display:flex;justify-content:flex-end;margin-top:8px}.review-reset-row button{box-shadow:none;background:#302526;border-color:#624046;font-size:12px;padding:7px 9px}
-.catalog-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}.catalog-filter-grid .wide{grid-column:1/-1}.review-filter-wrap.hidden,.checklist-panel.hidden,.checklist-sort-wrap.hidden{display:none!important}.checklist-panel{margin:-1px 0 8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#121721}.checklist-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.checklist-panel-title{font-size:11px;color:var(--muted);font-weight:700}.checklist-colors{display:flex;gap:6px;flex-wrap:wrap}.color-toggle{min-width:40px;padding:6px 10px;border-radius:999px;font-size:11px;box-shadow:none;opacity:.42;position:relative}.color-toggle.active{opacity:1;outline:2px solid #fff;outline-offset:1px}.color-toggle.active:after{content:'✓';font-size:9px;margin-left:4px}.checklist-help{margin-top:6px;font-size:10px;color:var(--muted);line-height:1.4}
+.catalog-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}.catalog-filter-grid .wide{grid-column:1/-1}.review-filter-wrap.hidden,.checklist-panel.hidden,.checklist-sort-wrap.hidden{display:none!important}.checklist-panel{margin:-1px 0 8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#121721}.checklist-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.checklist-panel-title{font-size:11px;color:var(--muted);font-weight:700}.gray-count{flex:0 0 auto;padding:3px 8px;border:1px solid #555c68;border-radius:999px;background:#30343d;color:#d6dae1;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}.checklist-colors{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.color-toggle{min-width:0;padding:6px 4px;border-radius:999px;font-size:11px;box-shadow:none;opacity:.62;position:relative;display:flex;align-items:baseline;justify-content:center;gap:4px;white-space:nowrap}.color-toggle-label{font-weight:700}.color-toggle-count{font-size:10px;font-weight:800;font-variant-numeric:tabular-nums}.color-toggle.active{opacity:1;outline:2px solid #fff;outline-offset:1px}.color-toggle.active:after{content:'✓';position:absolute;top:0px;right:5px;font-size:8px;line-height:1}.checklist-help{margin-top:6px;font-size:10px;color:var(--muted);line-height:1.4}
 @media(min-width:760px){.danger-pair{grid-column:auto;display:contents}.toolbar.tight button{font-size:14px}}
 </style></head><body>
 <header>
@@ -108,15 +108,15 @@ button.sync-delete{background:#3a2020;border-color:#714046}
       </div>
     </div>
     <div id="checklistPanel" class="checklist-panel hidden">
-      <div class="checklist-panel-head"><span class="checklist-panel-title">チェックリストに表示する色</span><span class="small">灰色は対象外</span></div>
+      <div class="checklist-panel-head"><span class="checklist-panel-title">色別内訳・表示切替</span><span id="grayCount" class="gray-count" title="灰色はチェックリスト対象外">灰 0</span></div>
       <div class="checklist-colors" id="checklistColors">
-        <button type="button" class="color-toggle c-red" data-check-color="red">赤</button>
-        <button type="button" class="color-toggle c-orange" data-check-color="orange">橙</button>
-        <button type="button" class="color-toggle c-yellow" data-check-color="yellow">黄</button>
-        <button type="button" class="color-toggle c-green" data-check-color="green">緑</button>
-        <button type="button" class="color-toggle c-blue" data-check-color="blue">青</button>
+        <button type="button" class="color-toggle c-red" data-check-color="red"><span class="color-toggle-label">赤</span><span class="color-toggle-count" data-color-count="red">0</span></button>
+        <button type="button" class="color-toggle c-orange" data-check-color="orange"><span class="color-toggle-label">橙</span><span class="color-toggle-count" data-color-count="orange">0</span></button>
+        <button type="button" class="color-toggle c-yellow" data-check-color="yellow"><span class="color-toggle-label">黄</span><span class="color-toggle-count" data-color-count="yellow">0</span></button>
+        <button type="button" class="color-toggle c-green" data-check-color="green"><span class="color-toggle-label">緑</span><span class="color-toggle-count" data-color-count="green">0</span></button>
+        <button type="button" class="color-toggle c-blue" data-check-color="blue"><span class="color-toggle-label">青</span><span class="color-toggle-count" data-color-count="blue">0</span></button>
       </div>
-      <div class="checklist-help">色順：赤 → 橙 → 黄 → 緑 → 青 ／ 訪問状況順：未訪問 → 訪問済み</div>
+      <div class="checklist-help">数字＝イベント全体の振り分け数 ／ 灰色はチェックリスト対象外</div>
     </div>
     <div class="toolbar tight">
       <button class="primary" id="syncBtn">公式リスト同期</button>
@@ -130,7 +130,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別に絞り込めます。　<span class="small">app v12R4</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別件数つきで絞り込めます。　<span class="small">app v12R5</span></div>
   </section>
 
   <section id="eventPage" class="page hidden">
@@ -149,7 +149,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-08-25-12R4';
+<script>const VERSION='2026-09-01-12R5';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const OBSOLETE_TAG_KEYS=['kemoket_tag_defs_v2','kemoket_shared_tags_v1'];
@@ -520,7 +520,9 @@ function renderFilters(){
   const checklist=prefs.viewMode==='checklist';
   const checklistPanel=document.getElementById('checklistPanel');if(checklistPanel)checklistPanel.classList.toggle('hidden',!checklist);
   const sortWrap=document.getElementById('checklistSortWrap');if(sortWrap)sortWrap.classList.toggle('hidden',!checklist);
-  document.querySelectorAll('[data-check-color]').forEach(b=>{const active=prefs.checklistColors.includes(b.dataset.checkColor);b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');});
+  const colorCounts={red:0,orange:0,yellow:0,green:0,blue:0,gray:0};circles.forEach(c=>{if(Object.prototype.hasOwnProperty.call(colorCounts,c.state.color))colorCounts[c.state.color]++;});
+  document.querySelectorAll('[data-check-color]').forEach(b=>{const color=b.dataset.checkColor,active=prefs.checklistColors.includes(color),count=colorCounts[color]||0;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');b.setAttribute('aria-label',`${({red:'赤',orange:'橙',yellow:'黄',green:'緑',blue:'青'})[color]} ${count}件・${active?'表示':'非表示'}`);const n=b.querySelector('[data-color-count]');if(n)n.textContent=count;});
+  const grayCount=document.getElementById('grayCount');if(grayCount){grayCount.textContent=`灰 ${colorCounts.gray||0}`;grayCount.setAttribute('aria-label',`灰 ${colorCounts.gray||0}件・チェックリスト対象外`);}
   const cb=document.getElementById('detailDefaultOpen'); if(cb) cb.checked=!!prefs.detailDefaultOpen;
   const rc=document.getElementById('showReviewedCheck'); if(rc) rc.checked=!!prefs.showReviewedCheck;
 }
