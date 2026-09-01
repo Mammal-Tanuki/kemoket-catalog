@@ -1,0 +1,30 @@
+{
+  "schema": "kemoket-map-profile-v1",
+  "eventId": "kemoket17",
+  "eventName": "けもケット17",
+  "generatedAt": "",
+  "views": [
+    {
+      "id": "all",
+      "label": "全体",
+      "src": "https://skypalette.jp/kemoket/img/map_d.jpg",
+      "width": 1536,
+      "height": 512
+    },
+    {
+      "id": "right",
+      "label": "右半分",
+      "src": "https://skypalette.jp/kemoket/img/map_d1.jpg",
+      "width": 1536,
+      "height": 1440
+    },
+    {
+      "id": "left",
+      "label": "左半分",
+      "src": "https://skypalette.jp/kemoket/img/map_d2.jpg",
+      "width": 1536,
+      "height": 1440
+    }
+  ],
+  "spots": []
+}
