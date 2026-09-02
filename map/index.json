@@ -1,0 +1,11 @@
+{
+  "schema": "kemoket-map-bundle-index-v1",
+  "profiles": [
+    {
+      "eventId": "kemoket17",
+      "eventName": "けもケット17",
+      "officialUrl": "https://skypalette.jp/kemoket/list.html",
+      "profile": "./map/kemoket17.json"
+    }
+  ]
+}
