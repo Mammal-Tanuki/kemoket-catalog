@@ -46,6 +46,7 @@ button.warn{background:#48281d;border-color:#7b5631}
 .hidden{display:none!important}
 .c-red{background:#6a2028}.c-orange{background:#6a421e}.c-yellow{background:#675f1d}.c-green{background:#1d5a39}.c-blue{background:#224e6d}.c-gray{background:#3b404a}
 
+
 .fields{display:grid;grid-template-columns:1fr 105px;gap:6px}
 .fields textarea{grid-column:1/-1}
 .small{font-size:11px;color:var(--muted)}
@@ -73,6 +74,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
 .catalog-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}.catalog-filter-grid .wide{grid-column:1/-1}.review-filter-wrap.hidden,.checklist-panel.hidden,.checklist-sort-wrap.hidden{display:none!important}.checklist-panel{margin:-1px 0 8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#121721}.checklist-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.checklist-panel-title{font-size:11px;color:var(--muted);font-weight:700}.gray-count{flex:0 0 auto;padding:3px 8px;border:1px solid #555c68;border-radius:999px;background:#30343d;color:#d6dae1;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}.checklist-colors{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.color-toggle{min-width:0;padding:6px 4px;border-radius:999px;font-size:11px;box-shadow:none;opacity:.62;position:relative;display:flex;align-items:baseline;justify-content:center;gap:4px;white-space:nowrap}.color-toggle-label{font-weight:700}.color-toggle-count{font-size:10px;font-weight:800;font-variant-numeric:tabular-nums}.color-toggle.active{opacity:1;outline:2px solid #fff;outline-offset:1px}.color-toggle.active:after{content:'✓';position:absolute;top:0px;right:5px;font-size:8px;line-height:1}.checklist-help{margin-top:6px;font-size:10px;color:var(--muted);line-height:1.4}
 @media(min-width:760px){.danger-pair{grid-column:auto;display:contents}.toolbar.tight button{font-size:14px}}
 
+
 /* v12R6: event-specific venue map framework (profile is loaded separately) */
 .eventbar{grid-template-columns:minmax(0,1fr) auto auto}
 .eventbar button{white-space:nowrap}
@@ -83,9 +85,12 @@ button.sync-delete{background:#3a2020;border-color:#714046}
 .map-color-panel{margin-bottom:8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#121721}.map-color-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.map-color-title{font-size:11px;color:var(--muted);font-weight:700}.map-marker-count{font-size:10px;color:var(--muted);white-space:nowrap}.map-colors{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.map-color-toggle{min-width:0;padding:6px 4px;border-radius:999px;font-size:11px;box-shadow:none;opacity:.62;position:relative;display:flex;align-items:baseline;justify-content:center;gap:4px;white-space:nowrap}.map-color-toggle.active{opacity:1;outline:2px solid #fff;outline-offset:1px}.map-color-toggle.active:after{content:'✓';position:absolute;top:0;right:5px;font-size:8px;line-height:1}.map-help{margin-top:6px;font-size:10px;color:var(--muted);line-height:1.45}
 .map-scroll{position:relative;overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:14px;background:#0b0d12;min-height:260px;max-height:72vh;box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}.map-stage{position:relative;transform-origin:0 0;margin:0}.map-stage img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}.map-overlay{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.map-spot{cursor:pointer;vector-effect:non-scaling-stroke}.map-spot.colored{stroke:rgba(255,255,255,.9);stroke-width:1.25}.map-spot.gray{fill:rgba(255,255,255,.001);stroke:rgba(255,255,255,0);stroke-width:0}.map-spot:hover,.map-spot:focus{stroke:#fff;stroke-width:2;outline:none}.map-spot.is-reviewed{stroke-dasharray:3 2}.map-stage-loading{display:grid;place-items:center;min-height:260px;color:var(--muted);font-size:12px}
 .map-profile-summary{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:8px}.map-profile-summary b{color:var(--text)}
-.map-dialog{border:1px solid var(--line);border-radius:18px;background:#20232a;color:var(--text);padding:0;width:min(92vw,420px);box-shadow:0 24px 70px rgba(0,0,0,.6)}.map-dialog::backdrop{background:rgba(0,0,0,.62)}.map-dialog-body{padding:15px}.map-dialog-space{font-size:13px;color:var(--accent);font-weight:900}.map-dialog-name{font-size:20px;font-weight:900;margin:3px 0 2px}.map-dialog-rep{color:var(--muted);font-size:12px}.map-dialog-state{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.map-state-pill{padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#151920;font-size:11px}.map-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.map-dialog-actions button{box-shadow:none}.map-dialog-color{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+.map-dialog{border:1px solid var(--line);border-radius:18px;background:#20232a;color:var(--text);padding:0;width:min(92vw,420px);box-shadow:0 24px 70px rgba(0,0,0,.6)}.map-dialog::backdrop{background:rgba(0,0,0,.62)}.map-dialog-body{padding:15px}.map-dialog-space{font-size:13px;color:var(--accent);font-weight:900}.map-dialog-name{font-size:20px;font-weight:900;margin:3px 0 2px}.map-dialog-rep{color:var(--muted);font-size:12px}.map-dialog-state{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.map-state-pill{padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#151920;font-size:11px}.map-dialog-edit{margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}.map-dialog-edit.hidden{display:none}.map-dialog-edit-label{font-size:11px;color:var(--muted);font-weight:800;margin:0 0 6px}.map-dialog-color-choices{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:11px}.map-dialog-color-btn{min-width:0;padding:8px 2px;border-radius:10px;box-shadow:none;font-size:11px;font-weight:800;opacity:.68}.map-dialog-color-btn.active{opacity:1;outline:2px solid #fff;outline-offset:1px}.map-dialog-visit-choices{display:grid;grid-template-columns:1fr 1fr;gap:7px}.map-dialog-visit-btn{box-shadow:none}.map-dialog-visit-btn.active{background:#173327;border-color:#4a9b72;outline:1px solid #73d6a2}.map-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.map-dialog-actions button{box-shadow:none}.map-dialog-color{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+
 
 @media(max-width:520px){.eventbar{grid-template-columns:1fr 1fr}.eventbar select{grid-column:1/-1}.eventbar #mapBtn,.eventbar #manageEventsBtn{width:100%}.map-toolbar{align-items:stretch}.map-view-tabs{width:100%}.map-zoom-controls{margin-left:0;width:100%;justify-content:flex-end}}
+
+
 
 
 .map-event-status{font-size:11px;color:var(--muted);margin-top:5px}
@@ -152,6 +157,8 @@ button.sync-delete{background:#3a2020;border-color:#714046}
   </section>
 
 
+
+
   <section id="mapPage" class="page hidden">
     <div class="map-page-head">
       <h2>会場マップ</h2>
@@ -189,12 +196,29 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
   </section>
 
+
   <dialog id="mapSpotDialog" class="map-dialog">
     <div class="map-dialog-body">
       <div id="mapDialogSpace" class="map-dialog-space"></div>
       <div id="mapDialogName" class="map-dialog-name"></div>
       <div id="mapDialogRep" class="map-dialog-rep"></div>
       <div id="mapDialogState" class="map-dialog-state"></div>
+      <div id="mapDialogEdit" class="map-dialog-edit hidden">
+        <div class="map-dialog-edit-label">色を変更</div>
+        <div class="map-dialog-color-choices" aria-label="サークルの色">
+          <button type="button" class="map-dialog-color-btn c-red" data-map-set-color="red">赤</button>
+          <button type="button" class="map-dialog-color-btn c-orange" data-map-set-color="orange">橙</button>
+          <button type="button" class="map-dialog-color-btn c-yellow" data-map-set-color="yellow">黄</button>
+          <button type="button" class="map-dialog-color-btn c-green" data-map-set-color="green">緑</button>
+          <button type="button" class="map-dialog-color-btn c-blue" data-map-set-color="blue">青</button>
+          <button type="button" class="map-dialog-color-btn c-gray" data-map-set-color="gray">灰</button>
+        </div>
+        <div class="map-dialog-edit-label">訪問状況</div>
+        <div class="map-dialog-visit-choices" aria-label="訪問状況">
+          <button type="button" class="map-dialog-visit-btn" data-map-set-visited="false">未訪問</button>
+          <button type="button" class="map-dialog-visit-btn" data-map-set-visited="true">✓ 訪問済み</button>
+        </div>
+      </div>
       <div class="map-dialog-actions"><button id="mapDialogListBtn" class="primary">一覧で開く</button><button id="mapDialogCloseBtn">閉じる</button></div>
     </div>
   </dialog>
@@ -703,6 +727,8 @@ function renameEvent(id){const ev=events.find(e=>e.id===id);if(!ev)return;const 
 function deleteEvent(id){const ev=events.find(e=>e.id===id);if(!ev||events.length<=1)return;if(!confirm(`「${ev.name}」を削除しますか？\nこの端末に保存した当該イベントの一覧・メモ等も削除します。`))return;['circles','prefs','sync','detached_checks'].forEach(k=>localStorage.removeItem(`kemoket_event_${id}_${k}_v1`));events=events.filter(e=>e.id!==id);if(currentEventId===id)currentEventId=events[0].id;saveEvents();switchEvent(currentEventId);renderEventUI();}
 
 
+
+
 function mapColorCounts(){const out={red:0,orange:0,yellow:0,green:0,blue:0};circles.forEach(c=>{if(out[c.state.color]!==undefined)out[c.state.color]++;});return out;}
 function circleBySpace(space){const s=cleanText(space).toUpperCase();return circles.find(c=>cleanText(c.space).toUpperCase()===s)||null;}
 function mapCurrentView(){return mapProfile?.views?.find(v=>v.id===mapViewId)||mapProfile?.views?.[0]||null;}
@@ -736,7 +762,9 @@ function renderMapStageLoaded(src){
 }
 function setMapZoom(next,anchorCenter=true){mapZoom=Math.max(.25,Math.min(3,Math.round(next*20)/20));renderMapStage();}
 function fitMapToViewer(){const view=mapCurrentView(),scroll=document.getElementById('mapScroll');if(!view||!scroll)return;const w=view.width||mapImageNatural.width||1000;const available=Math.max(260,scroll.clientWidth-2);mapZoom=Math.max(.25,Math.min(1.5,available/w));mapZoom=Math.round(mapZoom*100)/100;renderMapStage();scroll.scrollTo({left:0,top:0});}
-function openMapSpot(index){const s=mapSpotsForView()[Number(index)];if(!s)return;const c=circleBySpace(s.space);mapDialogCircleId=c?.id||'';document.getElementById('mapDialogSpace').textContent=s.space;document.getElementById('mapDialogName').textContent=c?.name||'サークル一覧に該当なし';document.getElementById('mapDialogRep').textContent=c?`代表：${c.rep||'—'}`:'この配置は現在の同期済みサークル一覧と対応していません。';const state=document.getElementById('mapDialogState');if(c){const colorLabel={red:'赤',orange:'橙',yellow:'黄',green:'緑',blue:'青',gray:'灰'}[c.state.color]||'灰';const dot=MAP_COLORS[c.state.color]||'#777';state.innerHTML=`<span class="map-state-pill"><span class="map-dialog-color" style="background:${dot}"></span>${colorLabel}</span>${prefs.showReviewedCheck?`<span class="map-state-pill">${c.state.reviewed?'✓ 確認済み':'未確認'}</span>`:''}<span class="map-state-pill">${c.state.visited?'✓ 訪問済み':'未訪問'}</span>`;}else state.innerHTML='';const btn=document.getElementById('mapDialogListBtn');btn.disabled=!c;document.getElementById('mapSpotDialog').showModal();}
+function renderMapSpotDialogState(){const c=circles.find(x=>x.id===mapDialogCircleId),state=document.getElementById('mapDialogState'),edit=document.getElementById('mapDialogEdit');if(!c){state.innerHTML='';edit.classList.add('hidden');return;}const colorLabel={red:'赤',orange:'橙',yellow:'黄',green:'緑',blue:'青',gray:'灰'}[c.state.color]||'灰',dot=MAP_COLORS[c.state.color]||'#777';state.innerHTML=`<span class="map-state-pill"><span class="map-dialog-color" style="background:${dot}"></span>${colorLabel}</span>${prefs.showReviewedCheck?`<span class="map-state-pill">${c.state.reviewed?'✓ 確認済み':'未確認'}</span>`:''}<span class="map-state-pill">${c.state.visited?'✓ 訪問済み':'未訪問'}</span>`;edit.classList.remove('hidden');edit.querySelectorAll('[data-map-set-color]').forEach(b=>{const active=b.dataset.mapSetColor===c.state.color;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');});edit.querySelectorAll('[data-map-set-visited]').forEach(b=>{const active=(b.dataset.mapSetVisited==='true')===!!c.state.visited;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');});}
+function updateMapDialogCircle(fn){if(!mapDialogCircleId)return;updateCircle(mapDialogCircleId,fn);renderFilters();renderStats();renderList();renderMapStage();renderMapSpotDialogState();}
+function openMapSpot(index){const s=mapSpotsForView()[Number(index)];if(!s)return;const c=circleBySpace(s.space);mapDialogCircleId=c?.id||'';document.getElementById('mapDialogSpace').textContent=s.space;document.getElementById('mapDialogName').textContent=c?.name||'サークル一覧に該当なし';document.getElementById('mapDialogRep').textContent=c?`代表：${c.rep||'—'}`:'この配置は現在の同期済みサークル一覧と対応していません。';renderMapSpotDialogState();const btn=document.getElementById('mapDialogListBtn');btn.disabled=!c;document.getElementById('mapSpotDialog').showModal();}
 function openMapCircleInList(){const c=circles.find(x=>x.id===mapDialogCircleId);if(!c)return;document.getElementById('mapSpotDialog').close();showPage('catalog');prefs.viewMode='all';prefs.reviewFilter='all';prefs.q=c.space;savePrefs();renderAll();requestAnimationFrame(()=>{document.querySelector(`.card[data-id="${CSS.escape(c.id)}"]`)?.scrollIntoView({behavior:'smooth',block:'center'});});}
 window.addEventListener('DOMContentLoaded',async()=>{
   load();
@@ -749,6 +777,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('mapZoomFitBtn').onclick=fitMapToViewer;
   document.getElementById('mapDialogCloseBtn').onclick=()=>document.getElementById('mapSpotDialog').close();
   document.getElementById('mapDialogListBtn').onclick=openMapCircleInList;
+  document.getElementById('mapDialogEdit').addEventListener('click',e=>{const colorBtn=e.target.closest('[data-map-set-color]'),visitBtn=e.target.closest('[data-map-set-visited]');if(colorBtn){updateMapDialogCircle(c=>c.state.color=colorBtn.dataset.mapSetColor);return;}if(visitBtn)updateMapDialogCircle(c=>c.state.visited=visitBtn.dataset.mapSetVisited==='true');});
   document.getElementById('mapViewTabs').addEventListener('click',e=>{const b=e.target.closest('[data-map-view]');if(!b)return;mapViewId=b.dataset.mapView;mapZoom=1;renderMapPage();});
   document.getElementById('mapColors').addEventListener('click',e=>{const b=e.target.closest('[data-map-color]');if(!b)return;const color=b.dataset.mapColor,set=new Set(prefs.checklistColors);if(set.has(color))set.delete(color);else set.add(color);prefs.checklistColors=['red','orange','yellow','green','blue'].filter(x=>set.has(x));savePrefs();renderFilters();renderMapColorControls();renderMapStage();});
   document.getElementById('mapStage').addEventListener('click',e=>{const r=e.target.closest('[data-map-spot]');if(r)openMapSpot(r.dataset.mapSpot);});
