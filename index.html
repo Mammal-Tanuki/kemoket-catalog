@@ -148,7 +148,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別件数つきで絞り込めます。会場マップは会場全体図1枚（JPG/PNG）から、Canvasで番号枠を検出し、壁配置と島配置を分離したうえで英字・番号経路・公式一覧を照合してイベント別のマップ定義JSONを自動生成できます。　<span class="small">app v12R11</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別件数つきで絞り込めます。会場マップは会場全体図1枚（JPG/PNG）から、Canvasで番号枠を検出し、文字名に依存せず配置セル群の形状・ラベル・番号経路・公式一覧を総合照合してイベント別のマップ定義JSONを自動生成できます。　<span class="small">app v12R12</span></div>
   </section>
 
 
@@ -662,7 +662,7 @@ function renderEventPage(){
     const auto=String(mp?.analysis?.method||'').startsWith('local-');
     const coverage=mp?.analysis?.matchedUnique!=null?` / 対応 ${mp.analysis.matchedUnique}件`:'';
     const mapStatus=mp?`マップ ${mp.views.length}図 / 座標 ${mp.spots.length}件${coverage}${auto?' <span class="map-auto-badge">端末自動解析</span>':''}`:'マップ未登録';
-    return `<div class="event-item" data-event-id="${esc(e.id)}"><div><b>${esc(e.name)}</b>${e.id===currentEventId?' <span class="small">（使用中）</span>':''}<div class="event-meta">${esc(e.officialUrl)}</div><div class="map-event-tools"><div class="map-event-status">${mapStatus}</div><div class="map-event-actions"><button class="map-auto" data-event-action="mapAuto">会場全体図を自動解析</button><button data-event-action="mapImport">JSON読込</button>${mp?'<button class="map-export" data-event-action="mapExport">JSON書出し</button><button data-event-action="mapDelete" class="danger">マップ削除</button>':''}</div><div class="map-file-note">自動解析は会場全体図1枚だけを対象に、Canvasで番号枠を直接検出します。外周の壁配置と、中央英字を囲む島配置を別々に構造化し、島の英字は公式一覧の件数・連続配置・OCRをまとめて照合します。番号方向は文字量を優先し、OCRは検証に使います。左右半分などの補助図は使用しません。</div></div></div><div class="event-actions"><button data-event-action="rename">名前変更</button>${events.length>1?'<button class="warn" data-event-action="delete">削除</button>':''}</div></div>`;
+    return `<div class="event-item" data-event-id="${esc(e.id)}"><div><b>${esc(e.name)}</b>${e.id===currentEventId?' <span class="small">（使用中）</span>':''}<div class="event-meta">${esc(e.officialUrl)}</div><div class="map-event-tools"><div class="map-event-status">${mapStatus}</div><div class="map-event-actions"><button class="map-auto" data-event-action="mapAuto">会場全体図を自動解析</button><button data-event-action="mapImport">JSON読込</button>${mp?'<button class="map-export" data-event-action="mapExport">JSON書出し</button><button data-event-action="mapDelete" class="danger">マップ削除</button>':''}</div><div class="map-file-note">自動解析は会場全体図1枚だけを対象に、Canvasで番号枠を直接検出します。A/B/Cなどの文字に役割を固定せず、外周型・対向列型など画像から得た形状で配置セル群を構造化し、公式一覧の件数・ラベルOCR・番号OCRを全体照合します。番号方向は複数地点のOCRで順方向/逆方向を採点します。左右半分などの補助図は使用しません。</div></div></div><div class="event-actions"><button data-event-action="rename">名前変更</button>${events.length>1?'<button class="warn" data-event-action="delete">削除</button>':''}</div></div>`;
   }).join('');
 }
 function switchEvent(id){
@@ -733,9 +733,10 @@ function eventCirclesFor(id){
 }
 function parseKemoketSpace(space){
   const t=String(space||'').normalize('NFKC').toUpperCase().replace(/\s+/g,'').replace(/[‐‑‒–—―ー]/g,'-');
-  const m=t.match(/^([A-Z])[-]?0*(\d{1,2})$/);if(!m)return null;
-  const n=Number(m[2]);if(!Number.isFinite(n)||n<1||n>99)return null;
-  return {letter:m[1],num:n,canonical:`${m[1]}-${String(n).padStart(2,'0')}`};
+  const m=t.match(/^([A-Z]{1,3})[-]?0*(\d{1,3})$/);if(!m)return null;
+  const n=Number(m[2]);if(!Number.isFinite(n)||n<1||n>999)return null;
+  const digits=Math.max(2,String(n).length);
+  return {letter:m[1],prefix:m[1],num:n,digits,canonical:`${m[1]}-${String(n).padStart(digits,'0')}`};
 }
 function readFileDataURL(file){return new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result||''));fr.onerror=reject;fr.readAsDataURL(file);});}
 async function fileToCanvas(file){
@@ -756,7 +757,12 @@ function ensureTesseractLoaded(){
 function setMapOcrProgress(text,value){const d=document.getElementById('mapOcrDialog'),st=document.getElementById('mapOcrStatus'),p=document.getElementById('mapOcrProgress');if(st)st.textContent=text;if(p&&Number.isFinite(value))p.value=Math.max(0,Math.min(1,value));if(d&&!d.open)d.showModal();}
 function closeMapOcrProgress(){const d=document.getElementById('mapOcrDialog');if(d?.open)d.close();}
 function median(values){if(!values.length)return 0;const a=[...values].sort((x,y)=>x-y),m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}
-function expectedSpaceModel(expectedSpaces){const byLetter=new Map(),allNums=[];for(const sp of expectedSpaces){const p=parseKemoketSpace(sp);if(!p)continue;if(!byLetter.has(p.letter))byLetter.set(p.letter,new Set());byLetter.get(p.letter).add(p.num);allNums.push(p.num);}return {byLetter,maxNum:Math.max(1,...allNums),letters:[...byLetter.keys()].sort()};}
+function expectedSpaceModel(expectedSpaces){
+  const byLetter=new Map(),allNums=[],digitsByLetter=new Map();
+  for(const sp of expectedSpaces){const p=parseKemoketSpace(sp);if(!p)continue;if(!byLetter.has(p.letter))byLetter.set(p.letter,new Set());byLetter.get(p.letter).add(p.num);digitsByLetter.set(p.letter,Math.max(digitsByLetter.get(p.letter)||2,p.digits||2));allNums.push(p.num);}
+  const letters=[...byLetter.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+  return {byLetter,digitsByLetter,maxNum:Math.max(1,...allNums),letters,total:letters.reduce((n,l)=>n+byLetter.get(l).size,0)};
+}
 function otsuThresholdFromCanvas(canvas){
   const ctx=canvas.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,canvas.width,canvas.height),hist=new Uint32Array(256),d=im.data,total=canvas.width*canvas.height;let sum=0;
   for(let i=0;i<d.length;i+=4){const g=Math.max(0,Math.min(255,Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2])));hist[g]++;sum+=g;}
@@ -818,63 +824,164 @@ function cellCenter(c){return {x:c.x+c.w/2,y:c.y+c.h/2};}
 function mergeIntervals(ints){const a=[...ints].sort((x,y)=>x[0]-y[0]),out=[];for(const iv of a){if(!out.length||iv[0]>out[out.length-1][1]+1)out.push([...iv]);else out[out.length-1][1]=Math.max(out[out.length-1][1],iv[1]);}return out;}
 function largestInternalGap(ints){const m=mergeIntervals(ints);let best=null;for(let i=0;i<m.length-1;i++){const a=m[i][1],b=m[i+1][0],g=b-a;if(!best||g>best.gap)best={start:a,end:b,gap:g,mid:(a+b)/2};}return best;}
 function topologyFromStructure(structure,model){
-  const p=structure.pitch,bbox=stripBBox(structure.strips),edgeBand=p*2.8,wallStripIndices=[],interiorStripIndices=[];
-  for(let i=0;i<structure.strips.length;i++){const r=structure.strips[i],c=stripCenter(r),dt=c.y-bbox.minY,db=bbox.maxY-c.y,dl=c.x-bbox.minX,dr=bbox.maxX-c.x,isWall=(r.orientation==='h'&&Math.min(dt,db)<=edgeBand)||(r.orientation==='v'&&Math.min(dl,dr)<=edgeBand);(isWall?wallStripIndices:interiorStripIndices).push(i);}
-  const wallCells=wallStripIndices.reduce((n,i)=>n+structure.strips[i].n,0),interiorCells=interiorStripIndices.reduce((n,i)=>n+structure.strips[i].n,0);if(!wallStripIndices.length||!interiorStripIndices.length)throw new Error('壁配置と島配置を分離できませんでした。');
-  const vWeight=interiorStripIndices.reduce((n,i)=>n+(structure.strips[i].orientation==='v'?structure.strips[i].n:0),0),hWeight=interiorCells-vWeight,dominant=vWeight>=hWeight?'v':'h';if(Math.max(vWeight,hWeight)<interiorCells*.85)throw new Error('島配置の向きを一意に判定できませんでした。');
-  const crossOf=i=>{const c=stripCenter(structure.strips[i]);return dominant==='v'?c.x:c.y;},sorted=[...interiorStripIndices].sort((a,b)=>crossOf(a)-crossOf(b)),lanes=[];
-  for(const si of sorted){const pos=crossOf(si),last=lanes[lanes.length-1];if(last&&Math.abs(pos-last.mean)<=p*.82){last.stripIndices.push(si);last.mean=last.stripIndices.reduce((s,j)=>s+crossOf(j),0)/last.stripIndices.length;}else lanes.push({mean:pos,stripIndices:[si]});}
-  if(lanes.length<4||lanes.length%2)throw new Error(`島の番号列を2列ずつに分離できませんでした（${lanes.length}列）。`);const islands=[];
-  for(let i=0;i<lanes.length;i+=2){const a=lanes[i],b=lanes[i+1],gap=b.mean-a.mean;if(gap>p*4.1)throw new Error(`島の左右列の間隔が不自然です（${gap.toFixed(1)}px）。`);const stripIndices=[...a.stripIndices,...b.stripIndices],cellCount=stripIndices.reduce((n,si)=>n+structure.strips[si].n,0),rs=stripIndices.map(si=>structure.strips[si]),bb=stripBBox(rs),mainIntervals=rs.map(r=>dominant==='v'?[r.y,r.y+r.h]:[r.x,r.x+r.w]),centralGap=largestInternalGap(mainIntervals);if(!centralGap||centralGap.gap<p*.7)throw new Error('島中央の英字ラベル領域を検出できませんでした。');islands.push({index:islands.length,lanes:[a,b],stripIndices,cellCount,bbox:bb,centralGap,labelComponent:null,labelRead:'',labelConf:0});}
-  const letters=model.letters,N=islands.length,hyp=[];for(let start=0;start+N<=letters.length;start++){const seq=letters.slice(start,start+N),counts=seq.map(l=>model.byLetter.get(l).size),gc=islands.map(g=>g.cellCount);if(counts.every((n,i)=>n===gc[i]))hyp.push(seq);const rev=[...seq].reverse();if(rev.some((x,i)=>x!==seq[i])&&rev.map(l=>model.byLetter.get(l).size).every((n,i)=>n===gc[i]))hyp.push(rev);}const uniqueHyp=[...new Map(hyp.map(x=>[x.join(''),x])).values()];if(!uniqueHyp.length)throw new Error(`島${N}個の配置数と公式一覧の英字別件数を整合できませんでした。`);
-  return {bbox,wallStripIndices,interiorStripIndices,wallCells,interiorCells,dominant,lanes,islands,islandHypotheses:uniqueHyp};
+  const p=structure.pitch,bbox=stripBBox(structure.strips),edgeBand=p*2.8,perimeterStripIndices=[],innerStripIndices=[];
+  for(let i=0;i<structure.strips.length;i++){
+    const r=structure.strips[i],c=stripCenter(r),dt=c.y-bbox.minY,db=bbox.maxY-c.y,dl=c.x-bbox.minX,dr=bbox.maxX-c.x;
+    const nearPerimeter=(r.orientation==='h'&&Math.min(dt,db)<=edgeBand)||(r.orientation==='v'&&Math.min(dl,dr)<=edgeBand);
+    (nearPerimeter?perimeterStripIndices:innerStripIndices).push(i);
+  }
+  const perimeterCells=perimeterStripIndices.reduce((n,i)=>n+structure.strips[i].n,0),innerCells=innerStripIndices.reduce((n,i)=>n+structure.strips[i].n,0),pairedGroups=[];
+  let dominant=null,lanes=[];
+  if(innerStripIndices.length){
+    const vWeight=innerStripIndices.reduce((n,i)=>n+(structure.strips[i].orientation==='v'?structure.strips[i].n:0),0),hWeight=innerCells-vWeight;
+    dominant=vWeight>=hWeight?'v':'h';
+    if(Math.max(vWeight,hWeight)>=innerCells*.72){
+      const crossOf=i=>{const c=stripCenter(structure.strips[i]);return dominant==='v'?c.x:c.y;},sorted=[...innerStripIndices].sort((a,b)=>crossOf(a)-crossOf(b));
+      for(const si of sorted){const pos=crossOf(si),last=lanes[lanes.length-1];if(last&&Math.abs(pos-last.mean)<=p*.82){last.stripIndices.push(si);last.mean=last.stripIndices.reduce((sum,j)=>sum+crossOf(j),0)/last.stripIndices.length;}else lanes.push({mean:pos,stripIndices:[si]});}
+      for(let i=0;i+1<lanes.length;){
+        const a=lanes[i],b=lanes[i+1],gap=b.mean-a.mean,stripIndices=[...a.stripIndices,...b.stripIndices],cellCount=stripIndices.reduce((n,si)=>n+structure.strips[si].n,0);
+        const countSupported=model.letters.some(l=>model.byLetter.get(l).size===cellCount);
+        if(gap<=p*4.1&&countSupported){
+          const rs=stripIndices.map(si=>structure.strips[si]),bb=stripBBox(rs),mainIntervals=rs.map(r=>dominant==='v'?[r.y,r.y+r.h]:[r.x,r.x+r.w]),centralGap=largestInternalGap(mainIntervals);
+          pairedGroups.push({index:pairedGroups.length,shape:'paired',lanes:[a,b],stripIndices,cellCount,bbox:bb,centralGap,labelComponent:null,labelRead:'',labelConf:0});i+=2;
+        }else i++;
+      }
+    }
+  }
+  const pairedStripSet=new Set(pairedGroups.flatMap(g=>g.stripIndices)),unassignedInner=innerStripIndices.filter(i=>!pairedStripSet.has(i));
+  if(unassignedInner.length)throw new Error(`内側に未分類の番号枠が残りました（${unassignedInner.length}枠）。この配置形状は現在の自動分類では確定できません。`);
+  const pairedCells=pairedGroups.reduce((n,g)=>n+g.cellCount,0);
+  if(perimeterCells+pairedCells!==structure.geometryCells)throw new Error('配置セル群の分類数が構造検出数と一致しません。');
+  const N=pairedGroups.length,hyp=[];
+  if(N){
+    const letters=model.letters;
+    for(let start=0;start+N<=letters.length;start++){
+      const seq=letters.slice(start,start+N),counts=seq.map(l=>model.byLetter.get(l).size),gc=pairedGroups.map(g=>g.cellCount);
+      if(counts.every((n,i)=>n===gc[i]))hyp.push(seq);
+      const rev=[...seq].reverse();if(rev.some((x,i)=>x!==seq[i])&&rev.map(l=>model.byLetter.get(l).size).every((n,i)=>n===gc[i]))hyp.push(rev);
+    }
+  }
+  const uniqueHyp=[...new Map(hyp.map(x=>[x.join('|'),x])).values()];
+  if(N&&!uniqueHyp.length)throw new Error(`対向列型グループ${N}個の配置数と公式一覧のグループ別件数を整合できませんでした。`);
+  return {bbox,perimeterStripIndices,innerStripIndices,wallStripIndices:perimeterStripIndices,interiorStripIndices:innerStripIndices,perimeterCells,innerCells,wallCells:perimeterCells,interiorCells:pairedCells,dominant,lanes,pairedGroups,islands:pairedGroups,islandHypotheses:uniqueHyp};
 }
 function componentInsideAnyStrip(c,structure){const cx=c.x+c.w/2,cy=c.y+c.h/2;return structure.strips.some(r=>cx>=r.x-1&&cx<=r.x+r.w+1&&cy>=r.y-1&&cy<=r.y+r.h+1);}
 function chooseIslandLabelComponent(structure,topology,island){
   const p=structure.pitch,dom=topology.dominant,crossMid=(island.lanes[0].mean+island.lanes[1].mean)/2,mainMid=island.centralGap.mid,cands=[];for(const c of structure.components){if(componentInsideAnyStrip(c,structure))continue;const cc=cellCenter(c),cross=dom==='v'?cc.x:cc.y,main=dom==='v'?cc.y:cc.x,mainSize=dom==='v'?c.h:c.w,crossSize=dom==='v'?c.w:c.h;if(mainSize<p*.55||mainSize>p*2.1||crossSize<p*.12||crossSize>p*2.2||c.area<p*p*.025||c.fill<.08)continue;const dc=Math.abs(cross-crossMid),dm=Math.abs(main-mainMid);if(dc>p*1.65||dm>Math.max(p*1.0,island.centralGap.gap*.72))continue;const score=dc/p+dm/p*1.8+Math.abs(mainSize/p-1.15)*.22;cands.push({c,score});}cands.sort((a,b)=>a.score-b.score);return cands[0]?.c||null;
 }
 async function recognizeIslandLabels(worker,source,structure,topology,model){
-  const allowed=[...new Set(topology.islandHypotheses.flat())].join('');await worker.setParameters({tessedit_char_whitelist:allowed,tessedit_pageseg_mode:'10',user_defined_dpi:'300'});let reads=0,strong=0;for(let i=0;i<topology.islands.length;i++){const g=topology.islands[i],comp=chooseIslandLabelComponent(structure,topology,g);if(!comp)throw new Error(`島${i+1}の中央英字候補を検出できませんでした。`);g.labelComponent=comp;setMapOcrProgress(`島中央の英字を識別中… ${i+1}/${topology.islands.length}`,.28+.19*((i+1)/topology.islands.length));const ret=await worker.recognize(makeLetterCrop(source,comp)),t=String(ret.data?.text||'').normalize('NFKC').toUpperCase().replace(/[^A-Z]/g,''),conf=Number(ret.data?.confidence)||0;if(t.length===1&&model.byLetter.has(t)){g.labelRead=t;g.labelConf=conf;reads++;if(conf>=55)strong++;}}
-  const scored=topology.islandHypotheses.map(seq=>{let score=0,matches=0,mismatches=0,strongMatches=0,strongMismatch=0;for(let i=0;i<seq.length;i++){const g=topology.islands[i];if(!g.labelRead)continue;const w=Math.max(1,g.labelConf/18);if(g.labelRead===seq[i]){score+=5*w;matches++;if(g.labelConf>=55)strongMatches++;}else{score-=7*w;mismatches++;if(g.labelConf>=70)strongMismatch++;}}return {seq,score,matches,mismatches,strongMatches,strongMismatch};}).sort((a,b)=>b.score-a.score);const best=scored[0],second=scored.find(x=>x.seq.join('')!==best.seq.join(''));if(best.strongMismatch>1)throw new Error('島中央の英字OCRと連続配置規則が大きく矛盾しました。');if(scored.length>1&&best.matches<2&&best.strongMatches<1)throw new Error('島の英字並びの向きを決めるOCR根拠が不足しています。');if(second&&best.score-second.score<8)throw new Error('島の英字並びを一意に確定できませんでした。');for(let i=0;i<best.seq.length;i++)topology.islands[i].letter=best.seq[i];topology.islandLetters=best.seq;topology.islandScore=best.score;topology.islandMargin=second?best.score-second.score:null;topology.islandLabelReads=reads;topology.islandStrongReads=strong;return {reads,strong,score:best.score,margin:topology.islandMargin,matches:best.matches,mismatches:best.mismatches};
+  if(!topology.islands.length){topology.islandLetters=[];return {reads:0,strong:0,score:0,margin:null,matches:0,mismatches:0};}
+  const allowed=[...new Set(topology.islandHypotheses.flat().join('').split(''))].join('');
+  await worker.setParameters({tessedit_char_whitelist:allowed,tessedit_pageseg_mode:'10',user_defined_dpi:'300'});
+  let reads=0,strong=0;
+  for(let i=0;i<topology.islands.length;i++){
+    const g=topology.islands[i],comp=chooseIslandLabelComponent(structure,topology,g);if(!comp)throw new Error(`配置グループ${i+1}のラベル候補を検出できませんでした。`);g.labelComponent=comp;
+    setMapOcrProgress(`配置グループのラベルを識別中… ${i+1}/${topology.islands.length}`,.28+.16*((i+1)/topology.islands.length));
+    const ret=await worker.recognize(makeLetterCrop(source,comp)),t=String(ret.data?.text||'').normalize('NFKC').toUpperCase().replace(/[^A-Z]/g,'').slice(0,3),conf=Number(ret.data?.confidence)||0;
+    if(t&&model.byLetter.has(t)){g.labelRead=t;g.labelConf=conf;reads++;if(conf>=55)strong++;}
+  }
+  const scored=topology.islandHypotheses.map(seq=>{let score=0,matches=0,mismatches=0,strongMatches=0,strongMismatch=0;for(let i=0;i<seq.length;i++){const g=topology.islands[i];if(!g.labelRead)continue;const w=Math.max(1,g.labelConf/18);if(g.labelRead===seq[i]){score+=5*w;matches++;if(g.labelConf>=55)strongMatches++;}else{score-=7*w;mismatches++;if(g.labelConf>=70)strongMismatch++;}}return {seq,score,matches,mismatches,strongMatches,strongMismatch};}).sort((a,b)=>b.score-a.score);
+  const best=scored[0],second=scored.find(x=>x.seq.join('|')!==best.seq.join('|'));if(!best)throw new Error('配置グループのラベル候補を作れませんでした。');
+  if(best.strongMismatch>1)throw new Error('ラベルOCRと公式配置グループの並びが大きく矛盾しました。');
+  if(scored.length>1&&best.matches<2&&best.strongMatches<1)throw new Error('配置グループのラベル割当を決めるOCR根拠が不足しています。');
+  if(second&&best.score-second.score<8)throw new Error('配置グループのラベル割当を一意に確定できませんでした。');
+  for(let i=0;i<best.seq.length;i++)topology.islands[i].letter=best.seq[i];topology.islandLetters=best.seq;topology.islandScore=best.score;topology.islandMargin=second?best.score-second.score:null;topology.islandLabelReads=reads;topology.islandStrongReads=strong;
+  return {reads,strong,score:best.score,margin:topology.islandMargin,matches:best.matches,mismatches:best.mismatches};
 }
 function perimeterCoordinate(c,b){const p=cellCenter(c),w=b.maxX-b.minX,h=b.maxY-b.minY,dt=Math.abs(p.y-b.minY),dr=Math.abs(p.x-b.maxX),db=Math.abs(p.y-b.maxY),dl=Math.abs(p.x-b.minX),edge=[dt,dr,db,dl].indexOf(Math.min(dt,dr,db,dl));if(edge===0)return p.x-b.minX;if(edge===1)return w+(p.y-b.minY);if(edge===2)return w+h+(b.maxX-p.x);return 2*w+h+(b.maxY-p.y);}
 function permutations(arr){const out=[];function rec(prefix,rest){if(!rest.length){out.push(prefix);return;}for(let i=0;i<rest.length;i++)rec([...prefix,rest[i]],[...rest.slice(0,i),...rest.slice(i+1)]);}rec([],arr);return out;}
 function circularSlice(arr,start,len){const out=[];for(let i=0;i<len;i++)out.push(arr[(start+i)%arr.length]);return out;}
 function solveWallGroups(structure,topology,model){
-  const islandSet=new Set(topology.islandLetters),wallLetters=model.letters.filter(l=>!islandSet.has(l)),wallCellIndices=[];for(let ci=0;ci<structure.cells.length;ci++)if(topology.wallStripIndices.includes(structure.cells[ci].stripIndex))wallCellIndices.push(ci);if(wallLetters.reduce((n,l)=>n+model.byLetter.get(l).size,0)!==wallCellIndices.length)throw new Error('壁配置の総数が公式一覧と一致しません。');if(wallLetters.length>7)throw new Error('壁配置の英字種類が多すぎて自動分割できません。');const per=2*((topology.bbox.maxX-topology.bbox.minX)+(topology.bbox.maxY-topology.bbox.minY)),ordered=[...wallCellIndices].sort((a,b)=>perimeterCoordinate(structure.cells[a],topology.bbox)-perimeterCoordinate(structure.cells[b],topology.bbox)),t=ordered.map(ci=>perimeterCoordinate(structure.cells[ci],topology.bbox)),gaps=t.map((v,i)=>i<t.length-1?t[i+1]-v:(t[0]+per)-v),cands=[];
-  for(const perm of permutations(wallLetters)){for(let start=0;start<ordered.length;start++){let pos=start,score=0;const groups=[];for(const letter of perm){const len=model.byLetter.get(letter).size,end=(pos+len-1)%ordered.length;score+=gaps[end];groups.push({letter,cellIndices:circularSlice(ordered,pos,len),boundaryGap:gaps[end]});pos=(pos+len)%ordered.length;}const key=[...groups].sort((a,b)=>a.letter.localeCompare(b.letter)).map(g=>`${g.letter}:${g.cellIndices[0]}`).join('|');cands.push({score,groups,key});}}
-  const bestByKey=new Map();for(const c of cands){const old=bestByKey.get(c.key);if(!old||c.score>old.score)bestByKey.set(c.key,c);}const ranked=[...bestByKey.values()].sort((a,b)=>b.score-a.score),best=ranked[0],second=ranked[1];if(!best)throw new Error('壁配置の周回経路を作れませんでした。');if(second&&best.score-second.score<structure.pitch*3.0)throw new Error('壁配置の英字境界を一意に確定できませんでした。');topology.wallLetters=wallLetters;topology.wallGroups=best.groups;topology.wallBoundaryScore=best.score;topology.wallBoundaryMargin=second?best.score-second.score:null;return {letters:wallLetters,groups:best.groups,score:best.score,margin:topology.wallBoundaryMargin};
+  const pairedSet=new Set(topology.islandLetters||[]),perimeterLetters=model.letters.filter(l=>!pairedSet.has(l)),perimeterCellIndices=[];
+  for(let ci=0;ci<structure.cells.length;ci++)if(topology.perimeterStripIndices.includes(structure.cells[ci].stripIndex))perimeterCellIndices.push(ci);
+  if(perimeterLetters.reduce((n,l)=>n+model.byLetter.get(l).size,0)!==perimeterCellIndices.length)throw new Error('外周型グループの総数が公式一覧と一致しません。');
+  if(!perimeterLetters.length){topology.wallLetters=[];topology.wallGroups=[];return {letters:[],groups:[],score:0,margin:null};}
+  if(perimeterLetters.length>8)throw new Error('外周型グループが多すぎて自動分割の候補数が大きくなりすぎます。');
+  const per=2*((topology.bbox.maxX-topology.bbox.minX)+(topology.bbox.maxY-topology.bbox.minY)),ordered=[...perimeterCellIndices].sort((a,b)=>perimeterCoordinate(structure.cells[a],topology.bbox)-perimeterCoordinate(structure.cells[b],topology.bbox)),t=ordered.map(ci=>perimeterCoordinate(structure.cells[ci],topology.bbox)),gaps=t.map((v,i)=>i<t.length-1?t[i+1]-v:(t[0]+per)-v),cands=[];
+  for(const perm of permutations(perimeterLetters)){for(let start=0;start<ordered.length;start++){let pos=start,score=0;const groups=[];for(const letter of perm){const len=model.byLetter.get(letter).size,end=(pos+len-1)%ordered.length;score+=gaps[end];groups.push({letter,shape:'perimeter',cellIndices:circularSlice(ordered,pos,len),boundaryGap:gaps[end]});pos=(pos+len)%ordered.length;}const key=[...groups].sort((a,b)=>a.letter.localeCompare(b.letter)).map(g=>`${g.letter}:${g.cellIndices[0]}`).join('|');cands.push({score,groups,key});}}
+  const bestByKey=new Map();for(const c of cands){const old=bestByKey.get(c.key);if(!old||c.score>old.score)bestByKey.set(c.key,c);}const ranked=[...bestByKey.values()].sort((a,b)=>b.score-a.score),best=ranked[0],second=ranked[1];if(!best)throw new Error('外周型グループの経路を作れませんでした。');
+  if(second&&best.score-second.score<structure.pitch*3.0)throw new Error('外周型グループの境界を一意に確定できませんでした。');
+  topology.wallLetters=perimeterLetters;topology.wallGroups=best.groups;topology.wallBoundaryScore=best.score;topology.wallBoundaryMargin=second?best.score-second.score:null;
+  return {letters:perimeterLetters,groups:best.groups,score:best.score,margin:topology.wallBoundaryMargin};
 }
 function cellInkMass(structure,cell){const W=structure.width,H=structure.height,x0=Math.max(0,Math.floor(cell.x+cell.w*.18)),x1=Math.min(W-1,Math.ceil(cell.x+cell.w*.82)),y0=Math.max(0,Math.floor(cell.y+cell.h*.15)),y1=Math.min(H-1,Math.ceil(cell.y+cell.h*.85));let n=0;for(let y=y0;y<=y1;y++){let base=y*W;for(let x=x0;x<=x1;x++)n+=structure.mask[base+x]?1:0;}return n;}
 function laneCellIndices(structure,lane,dominant){const out=[];for(const si of lane.stripIndices)out.push(...structure.strips[si].cellIndices);out.sort((a,b)=>{const ca=cellCenter(structure.cells[a]),cb=cellCenter(structure.cells[b]);return (dominant==='v'?ca.y-cb.y:ca.x-cb.x);});return out;}
-function numberPathEvidence(structure,path){let score=0,reads=0,match=0,mismatch=0,high=0;for(let i=0;i<path.length;i++){const c=structure.cells[path[i]],conf=c.ocrConf||0;if(c.ocrNum==null||conf<55)continue;reads++;const ok=c.ocrNum===i+1,w=conf>=90?2:conf>=75?1:.45;score+=(ok?5:-7)*w;if(ok)match++;else mismatch++;if(conf>=90)high++;}return {score,reads,match,mismatch,high};}
-function chooseIslandNumberPath(structure,topology,island){const lanes=[...island.lanes].sort((a,b)=>a.mean-b.mean),a=laneCellIndices(structure,lanes[0],topology.dominant),b=laneCellIndices(structure,lanes[1],topology.dominant);if(a.length+b.length!==island.cellCount||Math.abs(a.length-b.length)>1)throw new Error(`${island.letter}島の左右列数が不整合です。`);const pathA=[...a,...[...b].reverse()],pathB=[...b,...[...a].reverse()],massA=cellInkMass(structure,structure.cells[a[0]]),massB=cellInkMass(structure,structure.cells[b[0]]),evA=numberPathEvidence(structure,pathA),evB=numberPathEvidence(structure,pathB);let path=null,reason='';if(massA<massB*.82){path=pathA;reason='ink';}else if(massB<massA*.82){path=pathB;reason='ink';}else if(evA.reads+evB.reads>=3&&Math.abs(evA.score-evB.score)>=5){path=evA.score>evB.score?pathA:pathB;reason='ocr';}else if(evA.score!==evB.score){path=evA.score>evB.score?pathA:pathB;reason='ocr-weak';}else throw new Error(`${island.letter}島の1番側を自動判定できませんでした。`);return {path,reason,mass:[massA,massB],ocr:path===pathA?evA:evB};}
-function chooseWallNumberPath(structure,group){const forward=group.cellIndices,reverse=[...group.cellIndices].reverse(),m0=cellInkMass(structure,structure.cells[forward[0]]),m1=cellInkMass(structure,structure.cells[forward[forward.length-1]]),e0=numberPathEvidence(structure,forward),e1=numberPathEvidence(structure,reverse);if(m0<m1*.82)return {path:forward,reason:'ink',ocr:e0,mass:[m0,m1]};if(m1<m0*.82)return {path:reverse,reason:'ink',ocr:e1,mass:[m0,m1]};if(e0.reads+e1.reads>=3&&Math.abs(e0.score-e1.score)>=5)return {path:e0.score>e1.score?forward:reverse,reason:'ocr',ocr:e0.score>e1.score?e0:e1,mass:[m0,m1]};if(e0.score!==e1.score)return {path:e0.score>e1.score?forward:reverse,reason:'ocr-weak',ocr:e0.score>e1.score?e0:e1,mass:[m0,m1]};throw new Error(`${group.letter}壁配置の1番側を自動判定できませんでした。`);}
+function numberPathEvidence(structure,path,expectedNums){
+  let score=0,reads=0,match=0,mismatch=0,high=0,weighted=0;
+  for(let i=0;i<path.length;i++){
+    const c=structure.cells[path[i]],conf=c.ocrConf||0;if(c.ocrNum==null||conf<45)continue;
+    const exp=expectedNums?.[i]??(i+1),edge=(i<3||i>=path.length-3)?1.25:1,cf=conf>=90?2.3:conf>=75?1.45:conf>=60?.85:.45,w=edge*cf;
+    reads++;weighted+=w;const ok=c.ocrNum===exp;score+=(ok?6.5:-8.5)*w;if(ok)match++;else mismatch++;if(conf>=90)high++;
+  }
+  return {score,reads,match,mismatch,high,weighted};
+}
+function evenlySampleIndices(n,count=11){if(n<=count)return [...Array(n)].map((_,i)=>i);const set=new Set([0,1,2,n-3,n-2,n-1]);for(let k=1;k<=count-6;k++)set.add(Math.round((n-1)*k/(count-5)));return [...set].filter(i=>i>=0&&i<n).sort((a,b)=>a-b);}
+function collectGroupAnchorCells(structure,topology){
+  const out=new Set();
+  for(const g of topology.islands){const lanes=[...g.lanes].sort((a,b)=>a.mean-b.mean),a=laneCellIndices(structure,lanes[0],topology.dominant),b=laneCellIndices(structure,lanes[1],topology.dominant),base=[...a,...[...b].reverse()];for(const i of evenlySampleIndices(base.length,13))out.add(base[i]);}
+  for(const g of topology.wallGroups||[]){for(const i of evenlySampleIndices(g.cellIndices.length,15))out.add(g.cellIndices[i]);}
+  return [...out];
+}
+function makeNumberCropVariant(source,cell,variant=0){
+  const size=96,c=document.createElement('canvas');c.width=c.height=size;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  const inset=Math.max(1.1,Math.min(cell.w,cell.h)*.14),sx=Math.max(0,cell.x+inset),sy=Math.max(0,cell.y+inset),sw=Math.max(2,Math.min(source.width-sx,cell.w-inset*2)),sh=Math.max(2,Math.min(source.height-sy,cell.h-inset*2)),scale=Math.min(76/sw,76/sh),dw=sw*scale,dh=sh*scale;ctx.drawImage(source,sx,sy,sw,sh,(size-dw)/2,(size-dh)/2,dw,dh);
+  if(variant===0){thresholdCanvasInPlace(c);return c;}
+  const im=ctx.getImageData(0,0,size,size),d=im.data;
+  for(let i=0;i<d.length;i+=4){const g=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);let v;if(variant===1)v=g<185?0:255;else v=Math.max(0,Math.min(255,(g-145)*1.9+155));d[i]=d[i+1]=d[i+2]=v;d[i+3]=255;}ctx.putImageData(im,0,0);return c;
+}
+async function recognizeGroupPathAnchors(worker,source,structure,topology){
+  const cells=collectGroupAnchorCells(structure,topology),items=[];for(const ci of cells)for(let variant=0;variant<3;variant++)items.push({cellIndex:ci,variant});
+  await worker.setParameters({tessedit_char_whitelist:'0123456789',tessedit_pageseg_mode:'11',classify_bln_numeric_mode:'1',user_defined_dpi:'300'});
+  const votes=new Map(),tile=144,cols=12,batchSize=144;let rawReads=0;
+  for(let base=0,batch=0;base<items.length;base+=batchSize,batch++){
+    const part=items.slice(base,base+batchSize),rows=Math.ceil(part.length/cols),atlas=document.createElement('canvas');atlas.width=cols*tile;atlas.height=rows*tile;const ctx=atlas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,atlas.width,atlas.height);
+    for(let j=0;j<part.length;j++){const crop=makeNumberCropVariant(source,structure.cells[part[j].cellIndex],part[j].variant),x=(j%cols)*tile+(tile-crop.width)/2,y=Math.floor(j/cols)*tile+(tile-crop.height)/2;ctx.drawImage(crop,x,y);}
+    setMapOcrProgress(`番号経路の複数アンカーを照合中… ${batch+1}/${Math.ceil(items.length/batchSize)}`,.58+.18*((base+part.length)/Math.max(1,items.length)));
+    const ret=await worker.recognize(atlas,{}, {text:false,tsv:true}),words=parseTsvWords(ret.data?.tsv);
+    for(const w of words){if(w.width>tile*.78||w.height>tile*.78)continue;const col=Math.floor(w.cx/tile),row=Math.floor(w.cy/tile),j=row*cols+col;if(j<0||j>=part.length)continue;const num=normalizeNumberOcr(w.text);if(num==null)continue;const ci=part[j].cellIndex;if(!votes.has(ci))votes.set(ci,new Map());const m=votes.get(ci),old=m.get(num)||{sum:0,count:0,max:0};old.sum+=Math.max(1,w.conf);old.count++;old.max=Math.max(old.max,w.conf);m.set(num,old);rawReads++;}
+  }
+  let decided=0,high=0;for(const [ci,m] of votes){const rank=[...m.entries()].map(([num,v])=>({num,...v,avg:v.sum/Math.max(1,v.count),voteScore:v.sum+v.count*12})).sort((a,b)=>b.voteScore-a.voteScore),best=rank[0],second=rank[1];if(!best)continue;const margin=best.voteScore-(second?.voteScore||0);if(best.max>=45&&(margin>=15||best.count>=2&&!second)){const c=structure.cells[ci];c.ocrNum=best.num;c.ocrConf=Math.min(99,Math.max(c.ocrConf||0,best.avg));decided++;if(c.ocrConf>=82)high++;}}
+  return {targets:cells.length,items:items.length,rawReads,decided,high};
+}
+function choosePathByEvidence(structure,pathA,pathB,expectedNums,label,shape){
+  const evA=numberPathEvidence(structure,pathA,expectedNums),evB=numberPathEvidence(structure,pathB,expectedNums),margin=Math.abs(evA.score-evB.score),winner=evA.score>=evB.score?{path:pathA,ev:evA,name:'forward'}:{path:pathB,ev:evB,name:'reverse'},loser=winner.ev===evA?evB:evA;
+  if(winner.ev.reads>=2&&margin>=5&&winner.ev.match>=1&&winner.ev.mismatch<=Math.max(2,winner.ev.match+1))return {path:winner.path,reason:`multi-ocr-${winner.name}`,ocr:winner.ev,margin};
+  if(winner.ev.reads>=4&&winner.ev.score>0&&winner.ev.score-loser.score>=2)return {path:winner.path,reason:`multi-ocr-weak-${winner.name}`,ocr:winner.ev,margin};
+  const m0=cellInkMass(structure,structure.cells[pathA[0]]),m1=cellInkMass(structure,structure.cells[pathA[pathA.length-1]]);
+  if(evA.reads+evB.reads===0&&Math.min(m0,m1)>0&&Math.max(m0,m1)/Math.min(m0,m1)>=2.15){const path=m0<m1?pathA:pathB;return {path,reason:'ink-last-resort',ocr:path===pathA?evA:evB,margin:0,mass:[m0,m1]};}
+  throw new Error(`${label}（${shape}）の番号方向を自動判定できませんでした。複数アンカーOCRの根拠が不足または拮抗しています。`);
+}
+function chooseIslandNumberPath(structure,topology,island,expectedNums){
+  const lanes=[...island.lanes].sort((a,b)=>a.mean-b.mean),a=laneCellIndices(structure,lanes[0],topology.dominant),b=laneCellIndices(structure,lanes[1],topology.dominant);if(a.length+b.length!==island.cellCount||Math.abs(a.length-b.length)>1)throw new Error(`${island.letter}の対向列セル数が不整合です。`);
+  return choosePathByEvidence(structure,[...a,...[...b].reverse()],[...b,...[...a].reverse()],expectedNums,island.letter,'対向列型');
+}
+function chooseWallNumberPath(structure,group,expectedNums){return choosePathByEvidence(structure,group.cellIndices,[...group.cellIndices].reverse(),expectedNums,group.letter,'外周型');}
 function buildSpotsFromTopology(structure,topology,model,expectedSpaces,sourceW,sourceH){
-  const expectedSet=new Set(expectedSpaces),spots=[],paths=[],highStats={match:0,mismatch:0,total:0};function addGroup(letter,path,kind,reason){const nums=[...model.byLetter.get(letter)].sort((a,b)=>a-b);if(path.length!==nums.length)throw new Error(`${letter}のセル数が公式一覧と一致しません。`);for(let i=0;i<path.length;i++){const num=nums[i],space=`${letter}-${String(num).padStart(2,'0')}`,c=structure.cells[path[i]];if(!expectedSet.has(space))throw new Error(`公式一覧にない配置 ${space} が生成されました。`);if(c.ocrNum!=null&&c.ocrConf>=90){highStats.total++;if(c.ocrNum===num)highStats.match++;else highStats.mismatch++;}spots.push({space,viewId:'all',x:c.x/sourceW,y:c.y/sourceH,w:c.w/sourceW,h:c.h/sourceH});}paths.push({letter,kind,cells:path.length,reason});}
-  for(const island of topology.islands){const chosen=chooseIslandNumberPath(structure,topology,island);addGroup(island.letter,chosen.path,'island',chosen.reason);island.numberReason=chosen.reason;}
-  for(const group of topology.wallGroups){const chosen=chooseWallNumberPath(structure,group);addGroup(group.letter,chosen.path,'wall',chosen.reason);group.numberReason=chosen.reason;}
+  const expectedSet=new Set(expectedSpaces),spots=[],paths=[],highStats={match:0,mismatch:0,total:0};
+  function addGroup(letter,path,kind,reason,ocr,margin){const nums=[...model.byLetter.get(letter)].sort((a,b)=>a-b),digits=model.digitsByLetter.get(letter)||2;if(path.length!==nums.length)throw new Error(`${letter}のセル数が公式一覧と一致しません。`);for(let i=0;i<path.length;i++){const num=nums[i],space=`${letter}-${String(num).padStart(digits,'0')}`,c=structure.cells[path[i]];if(!expectedSet.has(space))throw new Error(`公式一覧にない配置 ${space} が生成されました。`);if(c.ocrNum!=null&&c.ocrConf>=82){highStats.total++;if(c.ocrNum===num)highStats.match++;else highStats.mismatch++;}spots.push({space,viewId:'all',x:c.x/sourceW,y:c.y/sourceH,w:c.w/sourceW,h:c.h/sourceH});}paths.push({letter,kind,cells:path.length,reason,ocrReads:ocr?.reads||0,ocrMatch:ocr?.match||0,ocrMismatch:ocr?.mismatch||0,scoreMargin:Number((margin||0).toFixed(2))});}
+  for(const g of topology.islands){const nums=[...model.byLetter.get(g.letter)].sort((a,b)=>a-b),chosen=chooseIslandNumberPath(structure,topology,g,nums);addGroup(g.letter,chosen.path,'paired',chosen.reason,chosen.ocr,chosen.margin);g.numberReason=chosen.reason;}
+  for(const g of topology.wallGroups||[]){const nums=[...model.byLetter.get(g.letter)].sort((a,b)=>a-b),chosen=chooseWallNumberPath(structure,g,nums);addGroup(g.letter,chosen.path,'perimeter',chosen.reason,chosen.ocr,chosen.margin);g.numberReason=chosen.reason;}
   const uniq=new Set(spots.map(s=>s.space));if(spots.length!==expectedSpaces.length||uniq.size!==expectedSpaces.length)throw new Error(`最終配置の重複または不足を検出しました（${uniq.size}/${expectedSpaces.length}）。`);for(const sp of expectedSpaces)if(!uniq.has(sp))throw new Error(`最終配置に ${sp} がありません。`);return {spots,paths,highStats};
 }
-
 async function autoAnalyzeMapImage(eventId,file){
   const ev=events.find(e=>e.id===eventId),ec=eventCirclesFor(eventId),expected=[...new Set(ec.map(c=>parseKemoketSpace(c.space)?.canonical).filter(Boolean))],model=expectedSpaceModel(expected);if(!expected.length){alert('先にこのイベントの「公式リスト同期」を行ってください。\n同期済みの配置番号を正解候補として画像解析します。');return;}if(!file||!(/^image\/(?:jpeg|png|webp)$/i.test(file.type)||/\.(?:jpe?g|png|webp)$/i.test(file.name))){alert('会場全体図のJPG / PNG / WebPを1枚選択してください。');return;}
-  if(!confirm(`選択した1枚を「会場全体図」として、この端末内で自動解析します。\n\n・同期済み配置：${expected.length}件\n・解析時だけ画像解像度を自動正規化します（表示用画像は元画質のまま）\n・まず番号枠だけをCanvasで検出します\n・壁際の配置と、中央英字を囲む島配置を別々に解析します\n・島の英字は独立判定せず、公式一覧の件数と連続する英字列をまとめて照合します\n・番号の向きは文字量・少量の数字OCRを使って自動判定します\n・左右半分などの補助図は使用しません\n・画像自体は外部AIへ送信しません\n\n開始しますか？`))return;
+  if(!confirm(`選択した1枚を「会場全体図」として、この端末内で自動解析します。\n\n・同期済み配置：${expected.length}件 / ${model.letters.length}グループ\n・A/B/Cなど特定の文字を「壁」「島」と決めつけません\n・解析時だけ画像解像度を正規化します（表示用画像は元画質のまま）\n・番号枠をCanvasで検出し、位置関係から配置セル群を分類します\n・ラベルOCRと公式一覧のグループ別件数を全体照合します\n・番号方向は経路上の複数地点を3種類の画像処理でOCRして採点します\n・根拠が拮抗した場合は推測保存せず安全停止します\n・左右半分などの補助図は使用しません\n・画像自体は外部AIへ送信しません\n\n開始しますか？`))return;
   let worker=null;try{
     setMapOcrProgress('会場全体図を準備しています…',.02);const [src,originalSource]=await Promise.all([readFileDataURL(file),fileToCanvas(file)]);const normalized=normalizeMapAnalysisCanvas(originalSource),source=normalized.canvas;await new Promise(r=>setTimeout(r,30));
     setMapOcrProgress(`解析解像度を正規化しました（${normalized.inputWidth}×${normalized.inputHeight} → ${normalized.analysisWidth}×${normalized.analysisHeight}）`,.06);await new Promise(r=>setTimeout(r,35));
     setMapOcrProgress('番号枠をCanvasで構造解析しています…',.09);const structure=detectCanvasStructure(source,expected.length);await new Promise(r=>setTimeout(r,20));
-    setMapOcrProgress('壁配置と島配置を分離しています…',.20);const topology=topologyFromStructure(structure,model);const wallSolvedPre=topology.wallCells,islPre=topology.interiorCells;
+    setMapOcrProgress('配置セル群の形状を分類しています…',.20);const topology=topologyFromStructure(structure,model);const perimeterCells=topology.perimeterCells,pairedCells=topology.interiorCells;
     setMapOcrProgress('OCRエンジンを準備しています…',.25);worker=await createMapOcrWorker();mapOcrWorker=worker;
-    const letterStats=await recognizeIslandLabels(worker,source,structure,topology,model);setMapOcrProgress('壁配置の周回経路を解析しています…',.50);const wallStats=solveWallGroups(structure,topology,model);
-    const numberStats=await recognizeNumberAtlas(worker,source,structure);setMapOcrProgress('番号の向きを確定して全配置を生成しています…',.80);const built=buildSpotsFromTopology(structure,topology,model,expected,source.width,source.height),hs=built.highStats;
-    if(hs.total>=10&&hs.mismatch/hs.total>.10)throw new Error(`高信頼OCRとの不一致が多いため保存を中止しました（${hs.mismatch}/${hs.total}件）。`);
-    const analysis={method:'local-canvas-topology-overview-v5-normalized',sourceMode:'single-overview-image',expectedSpaces:expected.length,inputWidth:normalized.inputWidth,inputHeight:normalized.inputHeight,analysisWidth:normalized.analysisWidth,analysisHeight:normalized.analysisHeight,analysisScale:Number(normalized.scale.toFixed(6)),threshold:structure.threshold,connectedComponents:structure.components.length,geometryRectangles:structure.rawRectangles,geometryStrips:structure.strips.length,geometryCells:structure.geometryCells,estimatedCellPitch:Number(structure.pitch.toFixed(3)),wallCells:wallSolvedPre,islandCells:islPre,wallStripCount:topology.wallStripIndices.length,islandStripCount:topology.interiorStripIndices.length,islandOrientation:topology.dominant,islandGroups:topology.islands.length,islandLetters:topology.islandLetters,wallLetters:topology.wallLetters,islandLabelReads:letterStats.reads,islandStrongLabelReads:letterStats.strong,islandLabelMatches:letterStats.matches,islandLabelMismatches:letterStats.mismatches,islandSequenceScore:Number(letterStats.score.toFixed(2)),islandSequenceMargin:letterStats.margin==null?null:Number(letterStats.margin.toFixed(2)),wallBoundaryScore:Number(wallStats.score.toFixed(2)),wallBoundaryMargin:wallStats.margin==null?null:Number(wallStats.margin.toFixed(2)),numberAtlasItems:numberStats.items,numberAnchorReads:numberStats.reads,numberHighConfidenceReads:numberStats.high,numberHighConfidenceMatches:hs.match,numberHighConfidenceMismatches:hs.mismatch,matchedUnique:built.spots.length,spotCount:built.spots.length,missingSpaces:[],paths:built.paths,groups:[...topology.islands.map(g=>({kind:'island',letter:g.letter,cells:g.cellCount,labelRead:g.labelRead||'',labelConf:Math.round(g.labelConf||0)})),...topology.wallGroups.map(g=>({kind:'wall',letter:g.letter,cells:g.cellIndices.length,boundaryGap:Number(g.boundaryGap.toFixed(2))}))]};
+    const labelStats=await recognizeIslandLabels(worker,source,structure,topology,model);setMapOcrProgress('外周型グループの境界を解析しています…',.47);const perimeterStats=solveWallGroups(structure,topology,model);
+    setMapOcrProgress('番号経路のアンカー候補を準備しています…',.54);const anchorStats=await recognizeGroupPathAnchors(worker,source,structure,topology);
+    setMapOcrProgress('番号の向きを全体採点して配置IDを生成しています…',.80);const built=buildSpotsFromTopology(structure,topology,model,expected,source.width,source.height),hs=built.highStats;
+    if(hs.total>=12&&hs.mismatch/hs.total>.12)throw new Error(`高信頼OCRとの不一致が多いため保存を中止しました（${hs.mismatch}/${hs.total}件）。`);
+    const allGroupLetters=[...topology.islandLetters,...topology.wallLetters],groupSet=new Set(allGroupLetters);if(groupSet.size!==model.letters.length||model.letters.some(l=>!groupSet.has(l)))throw new Error('公式一覧の配置グループを一対一で割り当てられていません。');
+    const analysis={method:'local-canvas-topology-v6-generic-groups',sourceMode:'single-overview-image',expectedSpaces:expected.length,expectedGroups:model.letters.length,inputWidth:normalized.inputWidth,inputHeight:normalized.inputHeight,analysisWidth:normalized.analysisWidth,analysisHeight:normalized.analysisHeight,analysisScale:Number(normalized.scale.toFixed(6)),threshold:structure.threshold,connectedComponents:structure.components.length,geometryRectangles:structure.rawRectangles,geometryStrips:structure.strips.length,geometryCells:structure.geometryCells,estimatedCellPitch:Number(structure.pitch.toFixed(3)),perimeterCells,pairedCells,perimeterStripCount:topology.perimeterStripIndices.length,innerStripCount:topology.innerStripIndices.length,pairedGroups:topology.islands.length,pairedGroupLabels:topology.islandLetters,perimeterGroupLabels:topology.wallLetters,labelReads:labelStats.reads,strongLabelReads:labelStats.strong,labelMatches:labelStats.matches,labelMismatches:labelStats.mismatches,labelSequenceScore:Number((labelStats.score||0).toFixed(2)),labelSequenceMargin:labelStats.margin==null?null:Number(labelStats.margin.toFixed(2)),perimeterBoundaryScore:Number((perimeterStats.score||0).toFixed(2)),perimeterBoundaryMargin:perimeterStats.margin==null?null:Number(perimeterStats.margin.toFixed(2)),pathAnchorTargets:anchorStats.targets,pathAnchorVariants:anchorStats.items,pathAnchorRawReads:anchorStats.rawReads,pathAnchorDecided:anchorStats.decided,pathAnchorHighConfidence:anchorStats.high,numberHighConfidenceMatches:hs.match,numberHighConfidenceMismatches:hs.mismatch,matchedUnique:built.spots.length,spotCount:built.spots.length,missingSpaces:[],paths:built.paths,groups:[...topology.islands.map(g=>({shape:'paired',label:g.letter,cells:g.cellCount,labelRead:g.labelRead||'',labelConf:Math.round(g.labelConf||0)})),...(topology.wallGroups||[]).map(g=>({shape:'perimeter',label:g.letter,cells:g.cellIndices.length,boundaryGap:Number(g.boundaryGap.toFixed(2))}))]};
     const profile={schema:MAP_SCHEMA,eventId,eventName:ev?.name||eventId,generatedAt:new Date().toISOString(),views:[{id:'all',label:'全体',src,width:normalized.inputWidth,height:normalized.inputHeight}],spots:built.spots,analysis};setMapOcrProgress('解析結果を保存しています…',.96);saveMapProfileFor(eventId,profile);if(eventId===currentEventId){mapProfile=profile;mapViewId='all';mapZoom=1;}renderEventPage();
-    alert(`端末内マップ解析が完了しました。\n\n会場図：1枚（全体図）\n解析解像度：${normalized.inputWidth}×${normalized.inputHeight} → ${normalized.analysisWidth}×${normalized.analysisHeight}\n構造検出：${structure.geometryCells}/${expected.length}配置（${structure.strips.length}番号枠）\n壁配置：${wallSolvedPre}配置 / ${topology.wallLetters.join('・')}\n島配置：${islPre}配置 / ${topology.islands.length}島 / ${topology.islandLetters.join('・')}\n島英字OCR：${letterStats.reads}件（強信頼 ${letterStats.strong}件）\n数字アンカーOCR：${numberStats.reads}件\n高信頼OCR照合：${hs.match}/${hs.total}一致${hs.mismatch?`（不一致 ${hs.mismatch}）`:''}\n最終対応：${built.spots.length}/${expected.length}件（100%）\n\n会場マップ画面で位置とサークル名を確認してください。`);
+    alert(`端末内マップ解析が完了しました。\n\n会場図：1枚（全体図）\n解析解像度：${normalized.inputWidth}×${normalized.inputHeight} → ${normalized.analysisWidth}×${normalized.analysisHeight}\n構造検出：${structure.geometryCells}/${expected.length}配置（${structure.strips.length}番号枠）\n配置グループ：${model.letters.length}/${model.letters.length}\n対向列型：${pairedCells}配置 / ${topology.islands.length}群${topology.islandLetters.length?` / ${topology.islandLetters.join('・')}`:''}\n外周型：${perimeterCells}配置 / ${topology.wallGroups.length}群${topology.wallLetters.length?` / ${topology.wallLetters.join('・')}`:''}\nラベルOCR：${labelStats.reads}件（強信頼 ${labelStats.strong}件）\n番号アンカー：${anchorStats.decided}/${anchorStats.targets}地点を確定\n高信頼OCR照合：${hs.match}/${hs.total}一致${hs.mismatch?`（不一致 ${hs.mismatch}）`:''}\n最終対応：${built.spots.length}/${expected.length}件（100%）\n\n会場マップ画面で位置とサークル名を確認してください。`);
   }catch(e){console.error(e);alert(`マップの自動解析に失敗しました。\n${e?.message||e}\n\n誤ったmap.jsonは保存していません。元のマップ定義がある場合も上書きしていません。`);}finally{try{await worker?.terminate();}catch(_){}mapOcrWorker=null;closeMapOcrProgress();}
 }
-
 function chooseMapImageForAutoAnalysis(eventId){const input=document.createElement('input');input.type='file';input.accept='image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';input.multiple=false;input.onchange=()=>input.files?.[0]&&autoAnalyzeMapImage(eventId,input.files[0]);input.click();}
 
 function exportMapProfile(eventId){const mp=loadMapProfileFor(eventId);if(!mp)return;const ev=events.find(e=>e.id===eventId);const blob=new Blob([JSON.stringify(mp,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${String(ev?.name||eventId).replace(/[\\/:*?\"<>|]/g,'_')}_map.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
