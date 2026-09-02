@@ -1,5 +1,28 @@
-const CACHE='kemoket-catalog-v12R12';
-const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{if(new URL(e.request.url).origin===location.origin){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));}return r;}).catch(()=>caches.match('./index.html'))));});
+const CACHE='kemoket-catalog-v12R13';
+const CORE=[
+  './','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png',
+  './map/index.json','./map/kemoket17.json','./map/kemoket17.jpg'
+];
+self.addEventListener('install',e=>e.waitUntil(
+  caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())
+));
+self.addEventListener('activate',e=>e.waitUntil(
+  caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
+));
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  const u=new URL(e.request.url);
+  const same=u.origin===location.origin;
+  const isMap=same&&u.pathname.includes('/map/');
+  if(isMap){
+    e.respondWith(fetch(e.request).then(r=>{
+      if(r&&r.ok){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));}
+      return r;
+    }).catch(()=>caches.match(e.request).then(hit=>hit||caches.match('./index.html'))));
+    return;
+  }
+  e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{
+    if(same&&r&&r.ok){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));}
+    return r;
+  }).catch(()=>caches.match('./index.html'))));
+});

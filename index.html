@@ -84,11 +84,11 @@ button.sync-delete{background:#3a2020;border-color:#714046}
 .map-scroll{position:relative;overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:14px;background:#0b0d12;min-height:260px;max-height:72vh;box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}.map-stage{position:relative;transform-origin:0 0;margin:0}.map-stage img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}.map-overlay{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.map-spot{cursor:pointer;vector-effect:non-scaling-stroke}.map-spot.colored{stroke:rgba(255,255,255,.9);stroke-width:1.25}.map-spot.gray{fill:rgba(255,255,255,.001);stroke:rgba(255,255,255,0);stroke-width:0}.map-spot:hover,.map-spot:focus{stroke:#fff;stroke-width:2;outline:none}.map-spot.is-reviewed{stroke-dasharray:3 2}.map-stage-loading{display:grid;place-items:center;min-height:260px;color:var(--muted);font-size:12px}
 .map-profile-summary{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:8px}.map-profile-summary b{color:var(--text)}
 .map-dialog{border:1px solid var(--line);border-radius:18px;background:#20232a;color:var(--text);padding:0;width:min(92vw,420px);box-shadow:0 24px 70px rgba(0,0,0,.6)}.map-dialog::backdrop{background:rgba(0,0,0,.62)}.map-dialog-body{padding:15px}.map-dialog-space{font-size:13px;color:var(--accent);font-weight:900}.map-dialog-name{font-size:20px;font-weight:900;margin:3px 0 2px}.map-dialog-rep{color:var(--muted);font-size:12px}.map-dialog-state{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.map-state-pill{padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#151920;font-size:11px}.map-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.map-dialog-actions button{box-shadow:none}.map-dialog-color{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:4px}
-.map-event-tools{margin-top:7px;padding-top:7px;border-top:1px dashed #303744}.map-event-status{font-size:11px;color:var(--muted);margin-bottom:6px}.map-event-actions{display:flex;gap:6px;flex-wrap:wrap}.map-event-actions button{font-size:11px;padding:6px 8px;box-shadow:none}.map-event-actions .danger{background:#382023;border-color:#684047}.map-file-note{font-size:10px;color:var(--muted);line-height:1.4;margin-top:5px}
 
-.map-ocr-dialog{border:1px solid var(--line);border-radius:18px;background:#20232a;color:var(--text);padding:0;width:min(92vw,480px);box-shadow:0 24px 70px rgba(0,0,0,.65)}.map-ocr-dialog::backdrop{background:rgba(0,0,0,.7)}.map-ocr-body{padding:16px}.map-ocr-title{font-size:18px;font-weight:900;margin-bottom:8px}.map-ocr-status{font-size:12px;line-height:1.55;color:var(--muted);min-height:3.2em}.map-ocr-progress{width:100%;height:10px;margin:10px 0;accent-color:#5fb8e8}.map-ocr-note{font-size:10px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:8px}.map-auto-badge{display:inline-block;margin-left:5px;padding:2px 5px;border:1px solid #3a596a;border-radius:999px;color:#9ddcff;font-size:9px}.map-event-actions .map-auto{background:#153346;border-color:#39799a}.map-event-actions .map-export{background:#183524;border-color:#3f7551}
 @media(max-width:520px){.eventbar{grid-template-columns:1fr 1fr}.eventbar select{grid-column:1/-1}.eventbar #mapBtn,.eventbar #manageEventsBtn{width:100%}.map-toolbar{align-items:stretch}.map-view-tabs{width:100%}.map-zoom-controls{margin-left:0;width:100%;justify-content:flex-end}}
 
+
+.map-event-status{font-size:11px;color:var(--muted);margin-top:5px}
 </style></head><body>
 <header>
   <div class="header-row">
@@ -148,7 +148,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     <div id="syncMeta" class="sync-meta"></div>
     <div class="stats" id="stats"></div>
     <section id="list"></section>
-    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。チェックリストは灰色以外のサークルを色別件数つきで絞り込めます。会場マップは会場全体図1枚（JPG/PNG）から、Canvasで番号枠を検出し、文字名に依存せず配置セル群の形状・ラベル・番号経路・公式一覧を総合照合してイベント別のマップ定義JSONを自動生成できます。　<span class="small">app v12R12</span></div>
+    <div class="footer-help">公式リスト同期では、<b>配置 / サークル名 / 代表者名 / web / pixiv / tw</b> を取り込みます。会場マップは対応イベントではアプリに収録済みです。　<span class="small">app v12R13</span></div>
   </section>
 
 
@@ -159,9 +159,8 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
     <div id="mapProfileSummary" class="map-profile-summary"></div>
     <div id="mapEmpty" class="panel map-empty hidden">
-      <b>このイベントには会場マップが登録されていません</b>
-      <div class="note">会場全体図1枚（JPG/PNG）をイベント管理から選ぶと、番号枠の構造を検出して数字・英字を個別認識し、同期済みの配置番号と照合してマップ定義JSONを自動生成します。左右半分などの補助図は読み込みません。解析済みJSONを直接読み込むこともできます。</div>
-      <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap"><button id="autoMapEmptyBtn" class="primary">会場全体図を自動解析</button><button id="openMapSettingsBtn">イベント管理</button></div>
+      <b>このイベントの会場マップはまだ収録されていません</b>
+      <div class="note">会場全体図の公開後、アプリ更新時にマップデータを追加できます。</div>
     </div>
     <div id="mapReady" class="hidden">
       <div class="map-toolbar">
@@ -199,20 +198,10 @@ button.sync-delete{background:#3a2020;border-color:#714046}
       <div class="map-dialog-actions"><button id="mapDialogListBtn" class="primary">一覧で開く</button><button id="mapDialogCloseBtn">閉じる</button></div>
     </div>
   </dialog>
-
-  <dialog id="mapOcrDialog" class="map-ocr-dialog">
-    <div class="map-ocr-body">
-      <div class="map-ocr-title">会場マップを解析中</div>
-      <div id="mapOcrStatus" class="map-ocr-status">準備しています…</div>
-      <progress id="mapOcrProgress" class="map-ocr-progress" max="1" value="0"></progress>
-      <div class="map-ocr-note">画像は外部AIへ送信しません。画像構造解析とOCRはこの端末内で実行します。初回のみOCRエンジン・英数字認識データをインターネットから取得します。番号枠はブラウザ標準Canvasだけで検出し、OCRは英字候補と番号方向の確認に限定します。画像によっては数十秒〜数分かかる場合があります。</div>
-    </div>
-  </dialog>
-
-  <section id="eventPage" class="page hidden">
+<section id="eventPage" class="page hidden">
     <div class="panel">
       <div class="kv"><h2 style="margin:0">イベント管理</h2><button id="backFromEventsBtn">← 戻る</button></div>
-      <p class="note">けもケット専用版です。今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・確認済み・購入予定・予算・メモ・訪問済み・表示設定を別々に保存します。会場マップは会場全体図1枚から、番号枠の構造検出・数字/英字の個別OCR・連番補完を端末内で行って配置座標を作ることも、既存のマップ定義JSONを読み込むこともできます。</p>
+      <p class="note">けもケット専用版です。今後のけもケットをここへ追加できます。イベントごとにサークル一覧・色・確認済み・購入予定・予算・メモ・訪問済み・表示設定を別々に保存します。会場マップは収録済みのイベントで自動的に利用できます。</p>
       <label class="checkline"><input id="detailDefaultOpen" type="checkbox"><span class="checktext"><b>購入予定品・予算・メモを初期状態で展開する</b><span>オフの場合は折りたたみ状態で起動します。個別の開閉はその起動中だけ有効で、次回起動時はこの設定に戻ります。</span></span></label>
       <label class="checkline"><input id="showReviewedCheck" type="checkbox"><span class="checktext"><b>「確認済み」チェックを表示する</b><span>サークルを事前に確認したかを記録する専用チェックです。色・訪問済みとは独立しています。オフにしても保存済みの確認状態は消えません。</span></span></label>
       <div class="review-reset-row"><button class="warn" id="clearReviewedBtn">確認済みを全初期化</button></div>
@@ -225,7 +214,7 @@ button.sync-delete{background:#3a2020;border-color:#714046}
     </div>
   </section>
 </main>
-<script>const VERSION='2026-09-02-12R10';
+<script>const VERSION='2026-09-02-12R13';
 const LS_EVENTS='kemoket_events_v1';
 const LS_CURRENT_EVENT='kemoket_current_event_v1';
 const OBSOLETE_TAG_KEYS=['kemoket_tag_defs_v2','kemoket_shared_tags_v1'];
@@ -256,9 +245,38 @@ function saveDetachedChecksFromCircles(){
   localStorage.setItem(detachedKey(),JSON.stringify(arr));
 }
 function clearDetachedChecks(){localStorage.removeItem(detachedKey());}
-function mapProfileKeyFor(id=currentEventId){return `kemoket_event_${id}_map_profile_v1`;}
-function loadMapProfileFor(id=currentEventId){try{return normalizeMapProfile(JSON.parse(localStorage.getItem(mapProfileKeyFor(id))||'null'));}catch(e){return null;}}
-function saveMapProfileFor(id,profile){if(profile)localStorage.setItem(mapProfileKeyFor(id),JSON.stringify(profile));else localStorage.removeItem(mapProfileKeyFor(id));}
+const BUNDLED_MAP_INDEX_URL='./map/index.json';
+let bundledMapEntries=[];
+let bundledMapProfiles=[];
+function removeLegacyMapStorage(){
+  for(const ev of events)localStorage.removeItem(`kemoket_event_${ev.id}_map_profile_v1`);
+}
+async function loadBundledMaps(){
+  bundledMapEntries=[];bundledMapProfiles=[];
+  try{
+    const res=await fetch(BUNDLED_MAP_INDEX_URL,{cache:'no-store'});
+    if(!res.ok)throw new Error(`map index ${res.status}`);
+    const idx=await res.json();
+    const entries=Array.isArray(idx?.profiles)?idx.profiles:[];
+    for(const entry of entries){
+      try{
+        const pr=await fetch(String(entry.profile||''),{cache:'no-store'});
+        if(!pr.ok)continue;
+        const mp=normalizeMapProfile(await pr.json());
+        if(mp){bundledMapEntries.push(entry);bundledMapProfiles.push({entry,profile:mp});}
+      }catch(_){}
+    }
+  }catch(e){console.warn('Bundled map load failed',e);}
+}
+function loadMapProfileFor(id=currentEventId){
+  const ev=events.find(e=>e.id===id);
+  if(!ev)return null;
+  const found=bundledMapProfiles.find(({entry,profile})=>
+    String(entry.eventId||profile.eventId||'')===id || id.startsWith(String(entry.eventId||profile.eventId||'')+'-') ||
+    (cleanText(entry.eventName||profile.eventName||'')&&cleanText(entry.eventName||profile.eventName||'')===cleanText(ev.name))
+  );
+  return found?.profile||null;
+}
 function normalizeMapProfile(raw){
   if(!raw||typeof raw!=='object')return null;
   const views=Array.isArray(raw.views)?raw.views.map(v=>({id:String(v.id||'').trim(),label:String(v.label||v.id||'').trim(),src:String(v.src||'').trim(),width:Number(v.width)||0,height:Number(v.height)||0})).filter(v=>v.id&&v.label&&v.src):[];
@@ -321,7 +339,7 @@ function load(){
     if(k17)savedCurrent=k17.id;
   }
   currentEventId=savedCurrent;
-  migrateK17();removeObsoleteTagStorage();
+  migrateK17();removeObsoleteTagStorage();removeLegacyMapStorage();
   try{circles=JSON.parse(localStorage.getItem(eventKey('circles'))||'[]')}catch(e){circles=[]}
   prefs=defaultPrefs();try{prefs=normalizePrefs(JSON.parse(localStorage.getItem(eventKey('prefs'))||'{}'))}catch(e){}
   try{syncInfo=JSON.parse(localStorage.getItem(eventKey('sync'))||'null')}catch(e){syncInfo=null}
@@ -626,8 +644,8 @@ function renderAll(){renderFilters();renderSyncMeta();renderStats();renderList()
 function updateCircle(id,fn){const c=circles.find(x=>x.id===id);if(!c)return;fn(c);c.state.updatedAt=Date.now();save();}
 function showPage(which){document.getElementById('catalogPage').classList.toggle('hidden',which!=='catalog');document.getElementById('mapPage').classList.toggle('hidden',which!=='map');document.getElementById('eventPage').classList.toggle('hidden',which!=='events');}
 function bindPref(id,key,event='change'){document.getElementById(id).addEventListener(event,e=>{prefs[key]=e.target.value;savePrefs();renderAll();});}
-function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),event:ev,syncInfo,prefs,circles,mapProfile},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ev.id}_backup.json`;a.click();URL.revokeObjectURL(a.href);}
-function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state=normalizeState(c.state);});if(o.syncInfo)syncInfo=o.syncInfo;if(o.prefs)prefs=normalizePrefs(o.prefs);if(o.mapProfile){const mp=normalizeMapProfile(o.mapProfile);if(mp){mapProfile=mp;saveMapProfileFor(currentEventId,mp);mapViewId=mp.views[0]?.id||'';}}save();saveSync();savePrefs();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
+function exportData(){const ev=currentEvent();const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),event:ev,syncInfo,prefs,circles},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ev.id}_backup.json`;a.click();URL.revokeObjectURL(a.href);}
+function importData(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(!Array.isArray(o.circles))throw new Error('bad');circles=o.circles;circles.forEach(c=>{if(!c.tw&&c.x)c.tw=c.x;c.state=normalizeState(c.state);});if(o.syncInfo)syncInfo=o.syncInfo;if(o.prefs)prefs=normalizePrefs(o.prefs);save();saveSync();savePrefs();renderAll();alert('バックアップを読み込みました');}catch(e){alert('読み込めないJSONです')}};fr.readAsText(file);}
 function deleteSyncContents(){
   if(!circles.length&&!syncInfo){alert('削除する同期内容はありません。');return;}
   if(!confirm('現在の公式サークル一覧と同期結果を削除しますか？\n\n色・確認済み・購入予定品・予算・メモ・訪問済みは退避し、同じサークルを再同期したときに引き継ぎます。'))return;
@@ -659,10 +677,8 @@ function renderEventPage(){
   const el=document.getElementById('eventList'); if(!el)return;
   el.innerHTML=events.map(e=>{
     const mp=loadMapProfileFor(e.id);
-    const auto=String(mp?.analysis?.method||'').startsWith('local-');
-    const coverage=mp?.analysis?.matchedUnique!=null?` / 対応 ${mp.analysis.matchedUnique}件`:'';
-    const mapStatus=mp?`マップ ${mp.views.length}図 / 座標 ${mp.spots.length}件${coverage}${auto?' <span class="map-auto-badge">端末自動解析</span>':''}`:'マップ未登録';
-    return `<div class="event-item" data-event-id="${esc(e.id)}"><div><b>${esc(e.name)}</b>${e.id===currentEventId?' <span class="small">（使用中）</span>':''}<div class="event-meta">${esc(e.officialUrl)}</div><div class="map-event-tools"><div class="map-event-status">${mapStatus}</div><div class="map-event-actions"><button class="map-auto" data-event-action="mapAuto">会場全体図を自動解析</button><button data-event-action="mapImport">JSON読込</button>${mp?'<button class="map-export" data-event-action="mapExport">JSON書出し</button><button data-event-action="mapDelete" class="danger">マップ削除</button>':''}</div><div class="map-file-note">自動解析は会場全体図1枚だけを対象に、Canvasで番号枠を直接検出します。A/B/Cなどの文字に役割を固定せず、外周型・対向列型など画像から得た形状で配置セル群を構造化し、公式一覧の件数・ラベルOCR・番号OCRを全体照合します。番号方向は複数地点のOCRで順方向/逆方向を採点します。左右半分などの補助図は使用しません。</div></div></div><div class="event-actions"><button data-event-action="rename">名前変更</button>${events.length>1?'<button class="warn" data-event-action="delete">削除</button>':''}</div></div>`;
+    const mapStatus=mp?`会場マップ収録済み / ${mp.spots.length}配置`:'会場マップ未収録';
+    return `<div class="event-item" data-event-id="${esc(e.id)}"><div><b>${esc(e.name)}</b>${e.id===currentEventId?' <span class="small">（使用中）</span>':''}<div class="event-meta">${esc(e.officialUrl)}</div><div class="map-event-status">${mapStatus}</div></div><div class="event-actions"><button data-event-action="rename">名前変更</button>${events.length>1?'<button class="warn" data-event-action="delete">削除</button>':''}</div></div>`;
   }).join('');
 }
 function switchEvent(id){
@@ -684,7 +700,7 @@ function addEvent(){
   events.push({id,name,officialUrl});saveEvents();document.getElementById('newEventName').value='';renderEventUI();switchEvent(id);showPage('catalog');
 }
 function renameEvent(id){const ev=events.find(e=>e.id===id);if(!ev)return;const name=String(prompt('イベント名',ev.name)||'').trim();if(!name)return;ev.name=name;saveEvents();renderEventUI();}
-function deleteEvent(id){const ev=events.find(e=>e.id===id);if(!ev||events.length<=1)return;if(!confirm(`「${ev.name}」を削除しますか？\nこの端末に保存した当該イベントの一覧・メモ等も削除します。`))return;['circles','prefs','sync','detached_checks','map_profile'].forEach(k=>localStorage.removeItem(`kemoket_event_${id}_${k}_v1`));events=events.filter(e=>e.id!==id);if(currentEventId===id)currentEventId=events[0].id;saveEvents();switchEvent(currentEventId);renderEventUI();}
+function deleteEvent(id){const ev=events.find(e=>e.id===id);if(!ev||events.length<=1)return;if(!confirm(`「${ev.name}」を削除しますか？\nこの端末に保存した当該イベントの一覧・メモ等も削除します。`))return;['circles','prefs','sync','detached_checks'].forEach(k=>localStorage.removeItem(`kemoket_event_${id}_${k}_v1`));events=events.filter(e=>e.id!==id);if(currentEventId===id)currentEventId=events[0].id;saveEvents();switchEvent(currentEventId);renderEventUI();}
 
 
 function mapColorCounts(){const out={red:0,orange:0,yellow:0,green:0,blue:0};circles.forEach(c=>{if(out[c.state.color]!==undefined)out[c.state.color]++;});return out;}
@@ -700,7 +716,7 @@ function renderMapPage(){
   empty.classList.add('hidden');ready.classList.remove('hidden');
   if(!mapProfile.views.some(v=>v.id===mapViewId))mapViewId=mapProfile.views[0].id;
   const mappedSpaces=new Set(mapProfile.spots.map(s=>cleanText(s.space).toUpperCase()));const circleMapped=circles.filter(c=>mappedSpaces.has(cleanText(c.space).toUpperCase())).length;
-  const autoNote=String(mapProfile.analysis?.method||'').startsWith('local-')?` / 自動解析 ${mapProfile.analysis.matchedUnique||circleMapped}/${mapProfile.analysis.expectedSpaces||circles.length}`:'';sum.innerHTML=`<b>${esc(currentEvent()?.name||'')}</b>　${mapProfile.views.length}図 / 座標 ${mapProfile.spots.length}件 / 一覧と対応 ${circleMapped}サークル${autoNote}`;
+  sum.innerHTML=`<b>${esc(currentEvent()?.name||'')}</b>　${mapProfile.views.length}図 / ${mapProfile.spots.length}配置 / 一覧と対応 ${circleMapped}サークル`;
   document.getElementById('mapViewTabs').innerHTML=mapProfile.views.map(v=>`<button class="map-view-btn ${v.id===mapViewId?'active':''}" data-map-view="${esc(v.id)}">${esc(v.label)}</button>`).join('');
   renderMapColorControls();renderMapStage();
 }
@@ -722,278 +738,12 @@ function setMapZoom(next,anchorCenter=true){mapZoom=Math.max(.25,Math.min(3,Math
 function fitMapToViewer(){const view=mapCurrentView(),scroll=document.getElementById('mapScroll');if(!view||!scroll)return;const w=view.width||mapImageNatural.width||1000;const available=Math.max(260,scroll.clientWidth-2);mapZoom=Math.max(.25,Math.min(1.5,available/w));mapZoom=Math.round(mapZoom*100)/100;renderMapStage();scroll.scrollTo({left:0,top:0});}
 function openMapSpot(index){const s=mapSpotsForView()[Number(index)];if(!s)return;const c=circleBySpace(s.space);mapDialogCircleId=c?.id||'';document.getElementById('mapDialogSpace').textContent=s.space;document.getElementById('mapDialogName').textContent=c?.name||'サークル一覧に該当なし';document.getElementById('mapDialogRep').textContent=c?`代表：${c.rep||'—'}`:'この配置は現在の同期済みサークル一覧と対応していません。';const state=document.getElementById('mapDialogState');if(c){const colorLabel={red:'赤',orange:'橙',yellow:'黄',green:'緑',blue:'青',gray:'灰'}[c.state.color]||'灰';const dot=MAP_COLORS[c.state.color]||'#777';state.innerHTML=`<span class="map-state-pill"><span class="map-dialog-color" style="background:${dot}"></span>${colorLabel}</span>${prefs.showReviewedCheck?`<span class="map-state-pill">${c.state.reviewed?'✓ 確認済み':'未確認'}</span>`:''}<span class="map-state-pill">${c.state.visited?'✓ 訪問済み':'未訪問'}</span>`;}else state.innerHTML='';const btn=document.getElementById('mapDialogListBtn');btn.disabled=!c;document.getElementById('mapSpotDialog').showModal();}
 function openMapCircleInList(){const c=circles.find(x=>x.id===mapDialogCircleId);if(!c)return;document.getElementById('mapSpotDialog').close();showPage('catalog');prefs.viewMode='all';prefs.reviewFilter='all';prefs.q=c.space;savePrefs();renderAll();requestAnimationFrame(()=>{document.querySelector(`.card[data-id="${CSS.escape(c.id)}"]`)?.scrollIntoView({behavior:'smooth',block:'center'});});}
-function importMapProfileFile(eventId,file){const fr=new FileReader();fr.onload=()=>{try{const raw=JSON.parse(fr.result),mp=normalizeMapProfile(raw);if(!mp)throw new Error('invalid');if(mp.eventId&&mp.eventId!==eventId&&!confirm(`このマップ定義の eventId は「${mp.eventId}」です。\n現在のイベント「${eventId}」へ読み込みますか？`))return;saveMapProfileFor(eventId,mp);if(eventId===currentEventId){mapProfile=mp;mapViewId=mp.views[0]?.id||'';mapZoom=1;}renderEventPage();alert(`マップ定義を読み込みました。\n${mp.views.length}図 / 座標 ${mp.spots.length}件`);}catch(e){alert('読み込めないマップ定義JSONです。\n schema / views / spots を確認してください。');}};fr.readAsText(file);}
-function chooseMapProfileFile(eventId){const input=document.createElement('input');input.type='file';input.accept='application/json,.json';input.onchange=()=>input.files?.[0]&&importMapProfileFile(eventId,input.files[0]);input.click();}
-
-const TESSERACT_JS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';
-let mapOcrWorker=null;
-function eventCirclesFor(id){
-  if(id===currentEventId)return circles;
-  try{const arr=JSON.parse(localStorage.getItem(`kemoket_event_${id}_circles_v1`)||'[]');return Array.isArray(arr)?arr:[];}catch(e){return [];}
-}
-function parseKemoketSpace(space){
-  const t=String(space||'').normalize('NFKC').toUpperCase().replace(/\s+/g,'').replace(/[‐‑‒–—―ー]/g,'-');
-  const m=t.match(/^([A-Z]{1,3})[-]?0*(\d{1,3})$/);if(!m)return null;
-  const n=Number(m[2]);if(!Number.isFinite(n)||n<1||n>999)return null;
-  const digits=Math.max(2,String(n).length);
-  return {letter:m[1],prefix:m[1],num:n,digits,canonical:`${m[1]}-${String(n).padStart(digits,'0')}`};
-}
-function readFileDataURL(file){return new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result||''));fr.onerror=reject;fr.readAsDataURL(file);});}
-async function fileToCanvas(file){
-  const bitmap=await createImageBitmap(file),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0);bitmap.close?.();return canvas;
-}
-function normalizeMapAnalysisCanvas(source,targetShortSide=512){
-  const srcW=source.width,srcH=source.height,short=Math.min(srcW,srcH),scale=targetShortSide/Math.max(1,short);
-  if(Math.abs(scale-1)<.01)return {canvas:source,scale:1,inputWidth:srcW,inputHeight:srcH,analysisWidth:srcW,analysisHeight:srcH};
-  const w=Math.max(1,Math.round(srcW*scale)),h=Math.max(1,Math.round(srcH*scale)),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(source,0,0,w,h);
-  return {canvas,scale,inputWidth:srcW,inputHeight:srcH,analysisWidth:w,analysisHeight:h};
-}
-function ensureTesseractLoaded(){
-  if(window.Tesseract?.createWorker)return Promise.resolve();
-  return new Promise((resolve,reject)=>{const existing=document.querySelector('script[data-kemoket-tesseract]');if(existing){existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=TESSERACT_JS_URL;sc.async=true;sc.dataset.kemoketTesseract='1';sc.onload=resolve;sc.onerror=()=>reject(new Error('OCRライブラリを読み込めませんでした'));document.head.appendChild(sc);});
-}
-function setMapOcrProgress(text,value){const d=document.getElementById('mapOcrDialog'),st=document.getElementById('mapOcrStatus'),p=document.getElementById('mapOcrProgress');if(st)st.textContent=text;if(p&&Number.isFinite(value))p.value=Math.max(0,Math.min(1,value));if(d&&!d.open)d.showModal();}
-function closeMapOcrProgress(){const d=document.getElementById('mapOcrDialog');if(d?.open)d.close();}
-function median(values){if(!values.length)return 0;const a=[...values].sort((x,y)=>x-y),m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}
-function expectedSpaceModel(expectedSpaces){
-  const byLetter=new Map(),allNums=[],digitsByLetter=new Map();
-  for(const sp of expectedSpaces){const p=parseKemoketSpace(sp);if(!p)continue;if(!byLetter.has(p.letter))byLetter.set(p.letter,new Set());byLetter.get(p.letter).add(p.num);digitsByLetter.set(p.letter,Math.max(digitsByLetter.get(p.letter)||2,p.digits||2));allNums.push(p.num);}
-  const letters=[...byLetter.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
-  return {byLetter,digitsByLetter,maxNum:Math.max(1,...allNums),letters,total:letters.reduce((n,l)=>n+byLetter.get(l).size,0)};
-}
-function otsuThresholdFromCanvas(canvas){
-  const ctx=canvas.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,canvas.width,canvas.height),hist=new Uint32Array(256),d=im.data,total=canvas.width*canvas.height;let sum=0;
-  for(let i=0;i<d.length;i+=4){const g=Math.max(0,Math.min(255,Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2])));hist[g]++;sum+=g;}
-  let sumB=0,wB=0,maxVar=-1,thr=150;for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=total-wB;if(!wF)break;sumB+=t*hist[t];const mB=sumB/wB,mF=(sum-sumB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>maxVar){maxVar=v;thr=t;}}
-  return {threshold:thr,imageData:im};
-}
-function darkMaskFromCanvas(canvas){const {threshold,imageData}=otsuThresholdFromCanvas(canvas),d=imageData.data,mask=new Uint8Array(canvas.width*canvas.height);for(let p=0,i=0;p<mask.length;p++,i+=4){const g=.299*d[i]+.587*d[i+1]+.114*d[i+2];mask[p]=g<=threshold?1:0;}return {mask,threshold};}
-function connectedComponents(mask,W,H){
-  const seen=new Uint8Array(mask.length),queue=new Int32Array(mask.length),out=[];let id=0;
-  for(let start=0;start<mask.length;start++){if(!mask[start]||seen[start])continue;let qh=0,qt=0;queue[qt++]=start;seen[start]=1;let area=0,minX=W,maxX=0,minY=H,maxY=0;
-    while(qh<qt){const idx=queue[qh++],y=(idx/W)|0,x=idx-y*W;area++;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
-      const y0=Math.max(0,y-1),y1=Math.min(H-1,y+1),x0=Math.max(0,x-1),x1=Math.min(W-1,x+1);for(let ny=y0;ny<=y1;ny++){let base=ny*W;for(let nx=x0;nx<=x1;nx++){if(nx===x&&ny===y)continue;const ni=base+nx;if(mask[ni]&&!seen[ni]){seen[ni]=1;queue[qt++]=ni;}}}
-    }
-    out.push({id:id++,x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1,area,fill:area/Math.max(1,(maxX-minX+1)*(maxY-minY+1))});
-  }
-  return out;
-}
-function longestDarkRun(mask,W,x,y,dx,dy,len){let best=0,cur=0;for(let i=0;i<len;i++){const px=x+dx*i,py=y+dy*i,v=(px>=0&&px<W&&py>=0&&py*W+px<mask.length)?mask[py*W+px]:0;if(v){cur++;if(cur>best)best=cur;}else cur=0;}return best;}
-function rectangleEdgeScore(mask,W,H,r){
-  const rows=[r.y,Math.min(H-1,r.y+1),Math.max(0,r.y+r.h-2),Math.min(H-1,r.y+r.h-1)],cols=[r.x,Math.min(W-1,r.x+1),Math.max(0,r.x+r.w-2),Math.min(W-1,r.x+r.w-1)];
-  const top=Math.max(longestDarkRun(mask,W,r.x,rows[0],1,0,r.w),longestDarkRun(mask,W,r.x,rows[1],1,0,r.w))/r.w;
-  const bottom=Math.max(longestDarkRun(mask,W,r.x,rows[2],1,0,r.w),longestDarkRun(mask,W,r.x,rows[3],1,0,r.w))/r.w;
-  const left=Math.max(longestDarkRun(mask,W,cols[0],r.y,0,1,r.h),longestDarkRun(mask,W,cols[1],r.y,0,1,r.h))/r.h;
-  const right=Math.max(longestDarkRun(mask,W,cols[2],r.y,0,1,r.h),longestDarkRun(mask,W,cols[3],r.y,0,1,r.h))/r.h;
-  return Math.min(top,bottom,left,right);
-}
-function chooseStripSubset(rects,expected){
-  const total=rects.reduce((s,r)=>s+r.n,0),excess=total-expected;if(excess===0)return rects;if(excess<0||excess>Math.max(80,Math.ceil(expected*.12)))return null;
-  const dp=Array(excess+1).fill(null);dp[0]={cost:0,idx:[]};
-  rects.forEach((r,i)=>{const removeCost=(r.edgeScore||0)*4+(r.gridFit||0)*3+(r.n>=2?1:0)+Math.min(2,r.n*.08);for(let s=excess-r.n;s>=0;s--){if(!dp[s])continue;const ns=s+r.n,c={cost:dp[s].cost+removeCost,idx:[...dp[s].idx,i]};if(!dp[ns]||c.cost<dp[ns].cost)dp[ns]=c;}});
-  if(!dp[excess])return null;const rm=new Set(dp[excess].idx);return rects.filter((_,i)=>!rm.has(i));
-}
-function detectCanvasStructure(canvas,expectedCount){
-  const W=canvas.width,H=canvas.height,{mask,threshold}=darkMaskFromCanvas(canvas),components=connectedComponents(mask,W,H),minDim=Math.min(W,H),maxDim=Math.max(W,H),raw=[];
-  for(const c of components){const sh=Math.min(c.w,c.h),lo=Math.max(c.w,c.h);if(sh<Math.max(6,minDim*.010)||sh>minDim*.060||lo<Math.max(12,minDim*.023)||lo>maxDim*.16||c.fill<.08||c.fill>.62)continue;const edgeScore=rectangleEdgeScore(mask,W,H,c);if(edgeScore<.72)continue;raw.push({...c,edgeScore,orientation:c.w>=c.h?'h':'v'});}
-  if(raw.length<8)throw new Error(`番号枠候補を十分に検出できませんでした（${raw.length}件）。`);
-  const medShort=median(raw.map(r=>Math.min(r.w,r.h)))||10;let best=null;for(let k=0;k<=320;k++){const pitch=medShort*(.52+.68*k/320);let err=0,total=0,totalNoSingles=0;for(const r of raw){const v=Math.max(r.w,r.h)/pitch,n=Math.max(1,Math.min(60,Math.round(v)));err+=Math.abs(v-n);total+=n;if(n>=2)totalNoSingles+=n;}const countErr=Math.min(Math.abs(total-expectedCount),Math.abs(totalNoSingles-expectedCount)),score=err/raw.length+countErr*.075;if(!best||score<best.score)best={score,pitch,total,totalNoSingles};}
-  const pitch=best.pitch;let rects=raw.map(r=>{const v=Math.max(r.w,r.h)/pitch,n=Math.max(1,Math.min(60,Math.round(v))),gridFit=1-Math.min(1,Math.abs(v-n));return {...r,n,gridFit};}).filter(r=>r.gridFit>.52);
-  rects=chooseStripSubset(rects,expectedCount);if(!rects)throw new Error(`番号枠の構造を${expectedCount}配置へ整合できませんでした。`);const total=rects.reduce((s,r)=>s+r.n,0);if(total!==expectedCount)throw new Error(`構造検出数が同期済み配置と一致しません（${total}/${expectedCount}）。`);
-  rects.sort((a,b)=>a.y-b.y||a.x-b.x);const cells=[];rects.forEach((r,si)=>{r.id=si;r.cellIndices=[];for(let i=0;i<r.n;i++){let x,y,w,h;if(r.orientation==='h'){const a=r.x+r.w*i/r.n,b=r.x+r.w*(i+1)/r.n;x=a;y=r.y;w=b-a;h=r.h;}else{const a=r.y+r.h*i/r.n,b=r.y+r.h*(i+1)/r.n;x=r.x;y=a;w=r.w;h=b-a;}const ci=cells.length;cells.push({x,y,w,h,stripIndex:si,indexInStrip:i,ocrNum:null,ocrConf:0});r.cellIndices.push(ci);}});
-  return {mask,threshold,components,strips:rects,cells,pitch,rawRectangles:raw.length,geometryCells:cells.length,width:W,height:H};
-}
-function pointRectDistance(px,py,r){const dx=px<r.x?r.x-px:px>r.x+r.w?px-(r.x+r.w):0,dy=py<r.y?r.y-py:py>r.y+r.h?py-(r.y+r.h):0;return Math.hypot(dx,dy);}
-function thresholdCanvasInPlace(canvas){const ctx=canvas.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,canvas.width,canvas.height),hist=new Uint32Array(256),d=im.data,total=canvas.width*canvas.height;let sum=0;for(let i=0;i<d.length;i+=4){const g=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);hist[g]++;sum+=g;}let wb=0,sb=0,best=-1,t0=170;for(let t=0;t<256;t++){wb+=hist[t];if(!wb)continue;const wf=total-wb;if(!wf)break;sb+=t*hist[t];const mb=sb/wb,mf=(sum-sb)/wf,v=wb*wf*(mb-mf)*(mb-mf);if(v>best){best=v;t0=t;}}for(let i=0;i<d.length;i+=4){const g=.299*d[i]+.587*d[i+1]+.114*d[i+2],v=g<=t0?0:255;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255;}ctx.putImageData(im,0,0);}
-function makeLetterCrop(source,r){const size=128,c=document.createElement('canvas');c.width=c.height=size;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';const pad=Math.max(3,Math.round(Math.max(r.w,r.h)*.42)),sx=Math.max(0,r.x-pad),sy=Math.max(0,r.y-pad),sw=Math.min(source.width-sx,r.w+pad*2),sh=Math.min(source.height-sy,r.h+pad*2),scale=Math.min(92/sw,92/sh),dw=sw*scale,dh=sh*scale;ctx.drawImage(source,sx,sy,sw,sh,(size-dw)/2,(size-dh)/2,dw,dh);thresholdCanvasInPlace(c);return c;}
-async function createMapOcrWorker(){await ensureTesseractLoaded();return await Tesseract.createWorker('eng',1,{logger:m=>{if(m?.status==='loading tesseract core')setMapOcrProgress('OCRエンジンを初期化しています…',.27);}});}
-function parseTsvWords(tsv){const out=[];for(const line of String(tsv||'').split(/\r?\n/)){const c=line.split('\t');if(c.length<12||c[0]!=='5')continue;const conf=Number(c[10]),text=String(c.slice(11).join('\t')||'').trim(),left=Number(c[6]),top=Number(c[7]),width=Number(c[8]),height=Number(c[9]);if(!text||![conf,left,top,width,height].every(Number.isFinite))continue;out.push({text,conf,left,top,width,height,cx:left+width/2,cy:top+height/2});}return out;}
-function normalizeNumberOcr(text){const t=String(text||'').normalize('NFKC').replace(/[^0-9]/g,'');if(!/^\d{1,2}$/.test(t))return null;const n=Number(t);return n>=1&&n<=99?n:null;}
-function makeNumberCrop(source,cell){const size=96,c=document.createElement('canvas');c.width=c.height=size;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';const inset=Math.max(1.1,Math.min(cell.w,cell.h)*.14),sx=Math.max(0,cell.x+inset),sy=Math.max(0,cell.y+inset),sw=Math.max(2,Math.min(source.width-sx,cell.w-inset*2)),sh=Math.max(2,Math.min(source.height-sy,cell.h-inset*2)),scale=Math.min(76/sw,76/sh),dw=sw*scale,dh=sh*scale;ctx.drawImage(source,sx,sy,sw,sh,(size-dw)/2,(size-dh)/2,dw,dh);thresholdCanvasInPlace(c);return c;}
-async function recognizeNumberAtlas(worker,source,structure){
-  const items=[];for(let si=0;si<structure.strips.length;si++){const s=structure.strips[si],idx=[0,s.n-1];if(s.n>=5)idx.push(Math.floor(s.n/2));for(const k of [...new Set(idx)].sort((a,b)=>a-b))items.push({si,index:k,cellIndex:s.cellIndices[k]});}
-  await worker.setParameters({tessedit_char_whitelist:'0123456789',tessedit_pageseg_mode:'11',classify_bln_numeric_mode:'1',user_defined_dpi:'300'});const tile=144,cols=12,batchSize=144;let reads=0,high=0;
-  for(let base=0,batch=0;base<items.length;base+=batchSize,batch++){const part=items.slice(base,base+batchSize),rows=Math.ceil(part.length/cols),atlas=document.createElement('canvas');atlas.width=cols*tile;atlas.height=rows*tile;const ctx=atlas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,atlas.width,atlas.height);for(let j=0;j<part.length;j++){const crop=makeNumberCrop(source,structure.cells[part[j].cellIndex]),x=(j%cols)*tile+(tile-crop.width)/2,y=Math.floor(j/cols)*tile+(tile-crop.height)/2;ctx.drawImage(crop,x,y);}setMapOcrProgress(`数字アンカーを一括識別中… ${batch+1}/${Math.ceil(items.length/batchSize)}`,.58+.18*((base+part.length)/items.length));const ret=await worker.recognize(atlas,{}, {text:false,tsv:true}),words=parseTsvWords(ret.data?.tsv);for(const w of words){if(w.width>tile*.78||w.height>tile*.78)continue;const col=Math.floor(w.cx/tile),row=Math.floor(w.cy/tile),j=row*cols+col;if(j<0||j>=part.length)continue;const num=normalizeNumberOcr(w.text);if(num==null)continue;const cell=structure.cells[part[j].cellIndex];if(cell.ocrNum==null||w.conf>cell.ocrConf){cell.ocrNum=num;cell.ocrConf=w.conf;}reads++;if(w.conf>=90)high++;}}
-  return {items:items.length,reads,high};
-}
-function stripBBox(strips){return {minX:Math.min(...strips.map(r=>r.x)),minY:Math.min(...strips.map(r=>r.y)),maxX:Math.max(...strips.map(r=>r.x+r.w)),maxY:Math.max(...strips.map(r=>r.y+r.h))};}
-function stripCenter(r){return {x:r.x+r.w/2,y:r.y+r.h/2};}
-function cellCenter(c){return {x:c.x+c.w/2,y:c.y+c.h/2};}
-function mergeIntervals(ints){const a=[...ints].sort((x,y)=>x[0]-y[0]),out=[];for(const iv of a){if(!out.length||iv[0]>out[out.length-1][1]+1)out.push([...iv]);else out[out.length-1][1]=Math.max(out[out.length-1][1],iv[1]);}return out;}
-function largestInternalGap(ints){const m=mergeIntervals(ints);let best=null;for(let i=0;i<m.length-1;i++){const a=m[i][1],b=m[i+1][0],g=b-a;if(!best||g>best.gap)best={start:a,end:b,gap:g,mid:(a+b)/2};}return best;}
-function topologyFromStructure(structure,model){
-  const p=structure.pitch,bbox=stripBBox(structure.strips),edgeBand=p*2.8,perimeterStripIndices=[],innerStripIndices=[];
-  for(let i=0;i<structure.strips.length;i++){
-    const r=structure.strips[i],c=stripCenter(r),dt=c.y-bbox.minY,db=bbox.maxY-c.y,dl=c.x-bbox.minX,dr=bbox.maxX-c.x;
-    const nearPerimeter=(r.orientation==='h'&&Math.min(dt,db)<=edgeBand)||(r.orientation==='v'&&Math.min(dl,dr)<=edgeBand);
-    (nearPerimeter?perimeterStripIndices:innerStripIndices).push(i);
-  }
-  const perimeterCells=perimeterStripIndices.reduce((n,i)=>n+structure.strips[i].n,0),innerCells=innerStripIndices.reduce((n,i)=>n+structure.strips[i].n,0),pairedGroups=[];
-  let dominant=null,lanes=[];
-  if(innerStripIndices.length){
-    const vWeight=innerStripIndices.reduce((n,i)=>n+(structure.strips[i].orientation==='v'?structure.strips[i].n:0),0),hWeight=innerCells-vWeight;
-    dominant=vWeight>=hWeight?'v':'h';
-    if(Math.max(vWeight,hWeight)>=innerCells*.72){
-      const crossOf=i=>{const c=stripCenter(structure.strips[i]);return dominant==='v'?c.x:c.y;},sorted=[...innerStripIndices].sort((a,b)=>crossOf(a)-crossOf(b));
-      for(const si of sorted){const pos=crossOf(si),last=lanes[lanes.length-1];if(last&&Math.abs(pos-last.mean)<=p*.82){last.stripIndices.push(si);last.mean=last.stripIndices.reduce((sum,j)=>sum+crossOf(j),0)/last.stripIndices.length;}else lanes.push({mean:pos,stripIndices:[si]});}
-      for(let i=0;i+1<lanes.length;){
-        const a=lanes[i],b=lanes[i+1],gap=b.mean-a.mean,stripIndices=[...a.stripIndices,...b.stripIndices],cellCount=stripIndices.reduce((n,si)=>n+structure.strips[si].n,0);
-        const countSupported=model.letters.some(l=>model.byLetter.get(l).size===cellCount);
-        if(gap<=p*4.1&&countSupported){
-          const rs=stripIndices.map(si=>structure.strips[si]),bb=stripBBox(rs),mainIntervals=rs.map(r=>dominant==='v'?[r.y,r.y+r.h]:[r.x,r.x+r.w]),centralGap=largestInternalGap(mainIntervals);
-          pairedGroups.push({index:pairedGroups.length,shape:'paired',lanes:[a,b],stripIndices,cellCount,bbox:bb,centralGap,labelComponent:null,labelRead:'',labelConf:0});i+=2;
-        }else i++;
-      }
-    }
-  }
-  const pairedStripSet=new Set(pairedGroups.flatMap(g=>g.stripIndices)),unassignedInner=innerStripIndices.filter(i=>!pairedStripSet.has(i));
-  if(unassignedInner.length)throw new Error(`内側に未分類の番号枠が残りました（${unassignedInner.length}枠）。この配置形状は現在の自動分類では確定できません。`);
-  const pairedCells=pairedGroups.reduce((n,g)=>n+g.cellCount,0);
-  if(perimeterCells+pairedCells!==structure.geometryCells)throw new Error('配置セル群の分類数が構造検出数と一致しません。');
-  const N=pairedGroups.length,hyp=[];
-  if(N){
-    const letters=model.letters;
-    for(let start=0;start+N<=letters.length;start++){
-      const seq=letters.slice(start,start+N),counts=seq.map(l=>model.byLetter.get(l).size),gc=pairedGroups.map(g=>g.cellCount);
-      if(counts.every((n,i)=>n===gc[i]))hyp.push(seq);
-      const rev=[...seq].reverse();if(rev.some((x,i)=>x!==seq[i])&&rev.map(l=>model.byLetter.get(l).size).every((n,i)=>n===gc[i]))hyp.push(rev);
-    }
-  }
-  const uniqueHyp=[...new Map(hyp.map(x=>[x.join('|'),x])).values()];
-  if(N&&!uniqueHyp.length)throw new Error(`対向列型グループ${N}個の配置数と公式一覧のグループ別件数を整合できませんでした。`);
-  return {bbox,perimeterStripIndices,innerStripIndices,wallStripIndices:perimeterStripIndices,interiorStripIndices:innerStripIndices,perimeterCells,innerCells,wallCells:perimeterCells,interiorCells:pairedCells,dominant,lanes,pairedGroups,islands:pairedGroups,islandHypotheses:uniqueHyp};
-}
-function componentInsideAnyStrip(c,structure){const cx=c.x+c.w/2,cy=c.y+c.h/2;return structure.strips.some(r=>cx>=r.x-1&&cx<=r.x+r.w+1&&cy>=r.y-1&&cy<=r.y+r.h+1);}
-function chooseIslandLabelComponent(structure,topology,island){
-  const p=structure.pitch,dom=topology.dominant,crossMid=(island.lanes[0].mean+island.lanes[1].mean)/2,mainMid=island.centralGap.mid,cands=[];for(const c of structure.components){if(componentInsideAnyStrip(c,structure))continue;const cc=cellCenter(c),cross=dom==='v'?cc.x:cc.y,main=dom==='v'?cc.y:cc.x,mainSize=dom==='v'?c.h:c.w,crossSize=dom==='v'?c.w:c.h;if(mainSize<p*.55||mainSize>p*2.1||crossSize<p*.12||crossSize>p*2.2||c.area<p*p*.025||c.fill<.08)continue;const dc=Math.abs(cross-crossMid),dm=Math.abs(main-mainMid);if(dc>p*1.65||dm>Math.max(p*1.0,island.centralGap.gap*.72))continue;const score=dc/p+dm/p*1.8+Math.abs(mainSize/p-1.15)*.22;cands.push({c,score});}cands.sort((a,b)=>a.score-b.score);return cands[0]?.c||null;
-}
-async function recognizeIslandLabels(worker,source,structure,topology,model){
-  if(!topology.islands.length){topology.islandLetters=[];return {reads:0,strong:0,score:0,margin:null,matches:0,mismatches:0};}
-  const allowed=[...new Set(topology.islandHypotheses.flat().join('').split(''))].join('');
-  await worker.setParameters({tessedit_char_whitelist:allowed,tessedit_pageseg_mode:'10',user_defined_dpi:'300'});
-  let reads=0,strong=0;
-  for(let i=0;i<topology.islands.length;i++){
-    const g=topology.islands[i],comp=chooseIslandLabelComponent(structure,topology,g);if(!comp)throw new Error(`配置グループ${i+1}のラベル候補を検出できませんでした。`);g.labelComponent=comp;
-    setMapOcrProgress(`配置グループのラベルを識別中… ${i+1}/${topology.islands.length}`,.28+.16*((i+1)/topology.islands.length));
-    const ret=await worker.recognize(makeLetterCrop(source,comp)),t=String(ret.data?.text||'').normalize('NFKC').toUpperCase().replace(/[^A-Z]/g,'').slice(0,3),conf=Number(ret.data?.confidence)||0;
-    if(t&&model.byLetter.has(t)){g.labelRead=t;g.labelConf=conf;reads++;if(conf>=55)strong++;}
-  }
-  const scored=topology.islandHypotheses.map(seq=>{let score=0,matches=0,mismatches=0,strongMatches=0,strongMismatch=0;for(let i=0;i<seq.length;i++){const g=topology.islands[i];if(!g.labelRead)continue;const w=Math.max(1,g.labelConf/18);if(g.labelRead===seq[i]){score+=5*w;matches++;if(g.labelConf>=55)strongMatches++;}else{score-=7*w;mismatches++;if(g.labelConf>=70)strongMismatch++;}}return {seq,score,matches,mismatches,strongMatches,strongMismatch};}).sort((a,b)=>b.score-a.score);
-  const best=scored[0],second=scored.find(x=>x.seq.join('|')!==best.seq.join('|'));if(!best)throw new Error('配置グループのラベル候補を作れませんでした。');
-  if(best.strongMismatch>1)throw new Error('ラベルOCRと公式配置グループの並びが大きく矛盾しました。');
-  if(scored.length>1&&best.matches<2&&best.strongMatches<1)throw new Error('配置グループのラベル割当を決めるOCR根拠が不足しています。');
-  if(second&&best.score-second.score<8)throw new Error('配置グループのラベル割当を一意に確定できませんでした。');
-  for(let i=0;i<best.seq.length;i++)topology.islands[i].letter=best.seq[i];topology.islandLetters=best.seq;topology.islandScore=best.score;topology.islandMargin=second?best.score-second.score:null;topology.islandLabelReads=reads;topology.islandStrongReads=strong;
-  return {reads,strong,score:best.score,margin:topology.islandMargin,matches:best.matches,mismatches:best.mismatches};
-}
-function perimeterCoordinate(c,b){const p=cellCenter(c),w=b.maxX-b.minX,h=b.maxY-b.minY,dt=Math.abs(p.y-b.minY),dr=Math.abs(p.x-b.maxX),db=Math.abs(p.y-b.maxY),dl=Math.abs(p.x-b.minX),edge=[dt,dr,db,dl].indexOf(Math.min(dt,dr,db,dl));if(edge===0)return p.x-b.minX;if(edge===1)return w+(p.y-b.minY);if(edge===2)return w+h+(b.maxX-p.x);return 2*w+h+(b.maxY-p.y);}
-function permutations(arr){const out=[];function rec(prefix,rest){if(!rest.length){out.push(prefix);return;}for(let i=0;i<rest.length;i++)rec([...prefix,rest[i]],[...rest.slice(0,i),...rest.slice(i+1)]);}rec([],arr);return out;}
-function circularSlice(arr,start,len){const out=[];for(let i=0;i<len;i++)out.push(arr[(start+i)%arr.length]);return out;}
-function solveWallGroups(structure,topology,model){
-  const pairedSet=new Set(topology.islandLetters||[]),perimeterLetters=model.letters.filter(l=>!pairedSet.has(l)),perimeterCellIndices=[];
-  for(let ci=0;ci<structure.cells.length;ci++)if(topology.perimeterStripIndices.includes(structure.cells[ci].stripIndex))perimeterCellIndices.push(ci);
-  if(perimeterLetters.reduce((n,l)=>n+model.byLetter.get(l).size,0)!==perimeterCellIndices.length)throw new Error('外周型グループの総数が公式一覧と一致しません。');
-  if(!perimeterLetters.length){topology.wallLetters=[];topology.wallGroups=[];return {letters:[],groups:[],score:0,margin:null};}
-  if(perimeterLetters.length>8)throw new Error('外周型グループが多すぎて自動分割の候補数が大きくなりすぎます。');
-  const per=2*((topology.bbox.maxX-topology.bbox.minX)+(topology.bbox.maxY-topology.bbox.minY)),ordered=[...perimeterCellIndices].sort((a,b)=>perimeterCoordinate(structure.cells[a],topology.bbox)-perimeterCoordinate(structure.cells[b],topology.bbox)),t=ordered.map(ci=>perimeterCoordinate(structure.cells[ci],topology.bbox)),gaps=t.map((v,i)=>i<t.length-1?t[i+1]-v:(t[0]+per)-v),cands=[];
-  for(const perm of permutations(perimeterLetters)){for(let start=0;start<ordered.length;start++){let pos=start,score=0;const groups=[];for(const letter of perm){const len=model.byLetter.get(letter).size,end=(pos+len-1)%ordered.length;score+=gaps[end];groups.push({letter,shape:'perimeter',cellIndices:circularSlice(ordered,pos,len),boundaryGap:gaps[end]});pos=(pos+len)%ordered.length;}const key=[...groups].sort((a,b)=>a.letter.localeCompare(b.letter)).map(g=>`${g.letter}:${g.cellIndices[0]}`).join('|');cands.push({score,groups,key});}}
-  const bestByKey=new Map();for(const c of cands){const old=bestByKey.get(c.key);if(!old||c.score>old.score)bestByKey.set(c.key,c);}const ranked=[...bestByKey.values()].sort((a,b)=>b.score-a.score),best=ranked[0],second=ranked[1];if(!best)throw new Error('外周型グループの経路を作れませんでした。');
-  if(second&&best.score-second.score<structure.pitch*3.0)throw new Error('外周型グループの境界を一意に確定できませんでした。');
-  topology.wallLetters=perimeterLetters;topology.wallGroups=best.groups;topology.wallBoundaryScore=best.score;topology.wallBoundaryMargin=second?best.score-second.score:null;
-  return {letters:perimeterLetters,groups:best.groups,score:best.score,margin:topology.wallBoundaryMargin};
-}
-function cellInkMass(structure,cell){const W=structure.width,H=structure.height,x0=Math.max(0,Math.floor(cell.x+cell.w*.18)),x1=Math.min(W-1,Math.ceil(cell.x+cell.w*.82)),y0=Math.max(0,Math.floor(cell.y+cell.h*.15)),y1=Math.min(H-1,Math.ceil(cell.y+cell.h*.85));let n=0;for(let y=y0;y<=y1;y++){let base=y*W;for(let x=x0;x<=x1;x++)n+=structure.mask[base+x]?1:0;}return n;}
-function laneCellIndices(structure,lane,dominant){const out=[];for(const si of lane.stripIndices)out.push(...structure.strips[si].cellIndices);out.sort((a,b)=>{const ca=cellCenter(structure.cells[a]),cb=cellCenter(structure.cells[b]);return (dominant==='v'?ca.y-cb.y:ca.x-cb.x);});return out;}
-function numberPathEvidence(structure,path,expectedNums){
-  let score=0,reads=0,match=0,mismatch=0,high=0,weighted=0;
-  for(let i=0;i<path.length;i++){
-    const c=structure.cells[path[i]],conf=c.ocrConf||0;if(c.ocrNum==null||conf<45)continue;
-    const exp=expectedNums?.[i]??(i+1),edge=(i<3||i>=path.length-3)?1.25:1,cf=conf>=90?2.3:conf>=75?1.45:conf>=60?.85:.45,w=edge*cf;
-    reads++;weighted+=w;const ok=c.ocrNum===exp;score+=(ok?6.5:-8.5)*w;if(ok)match++;else mismatch++;if(conf>=90)high++;
-  }
-  return {score,reads,match,mismatch,high,weighted};
-}
-function evenlySampleIndices(n,count=11){if(n<=count)return [...Array(n)].map((_,i)=>i);const set=new Set([0,1,2,n-3,n-2,n-1]);for(let k=1;k<=count-6;k++)set.add(Math.round((n-1)*k/(count-5)));return [...set].filter(i=>i>=0&&i<n).sort((a,b)=>a-b);}
-function collectGroupAnchorCells(structure,topology){
-  const out=new Set();
-  for(const g of topology.islands){const lanes=[...g.lanes].sort((a,b)=>a.mean-b.mean),a=laneCellIndices(structure,lanes[0],topology.dominant),b=laneCellIndices(structure,lanes[1],topology.dominant),base=[...a,...[...b].reverse()];for(const i of evenlySampleIndices(base.length,13))out.add(base[i]);}
-  for(const g of topology.wallGroups||[]){for(const i of evenlySampleIndices(g.cellIndices.length,15))out.add(g.cellIndices[i]);}
-  return [...out];
-}
-function makeNumberCropVariant(source,cell,variant=0){
-  const size=96,c=document.createElement('canvas');c.width=c.height=size;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  const inset=Math.max(1.1,Math.min(cell.w,cell.h)*.14),sx=Math.max(0,cell.x+inset),sy=Math.max(0,cell.y+inset),sw=Math.max(2,Math.min(source.width-sx,cell.w-inset*2)),sh=Math.max(2,Math.min(source.height-sy,cell.h-inset*2)),scale=Math.min(76/sw,76/sh),dw=sw*scale,dh=sh*scale;ctx.drawImage(source,sx,sy,sw,sh,(size-dw)/2,(size-dh)/2,dw,dh);
-  if(variant===0){thresholdCanvasInPlace(c);return c;}
-  const im=ctx.getImageData(0,0,size,size),d=im.data;
-  for(let i=0;i<d.length;i+=4){const g=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);let v;if(variant===1)v=g<185?0:255;else v=Math.max(0,Math.min(255,(g-145)*1.9+155));d[i]=d[i+1]=d[i+2]=v;d[i+3]=255;}ctx.putImageData(im,0,0);return c;
-}
-async function recognizeGroupPathAnchors(worker,source,structure,topology){
-  const cells=collectGroupAnchorCells(structure,topology),items=[];for(const ci of cells)for(let variant=0;variant<3;variant++)items.push({cellIndex:ci,variant});
-  await worker.setParameters({tessedit_char_whitelist:'0123456789',tessedit_pageseg_mode:'11',classify_bln_numeric_mode:'1',user_defined_dpi:'300'});
-  const votes=new Map(),tile=144,cols=12,batchSize=144;let rawReads=0;
-  for(let base=0,batch=0;base<items.length;base+=batchSize,batch++){
-    const part=items.slice(base,base+batchSize),rows=Math.ceil(part.length/cols),atlas=document.createElement('canvas');atlas.width=cols*tile;atlas.height=rows*tile;const ctx=atlas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,atlas.width,atlas.height);
-    for(let j=0;j<part.length;j++){const crop=makeNumberCropVariant(source,structure.cells[part[j].cellIndex],part[j].variant),x=(j%cols)*tile+(tile-crop.width)/2,y=Math.floor(j/cols)*tile+(tile-crop.height)/2;ctx.drawImage(crop,x,y);}
-    setMapOcrProgress(`番号経路の複数アンカーを照合中… ${batch+1}/${Math.ceil(items.length/batchSize)}`,.58+.18*((base+part.length)/Math.max(1,items.length)));
-    const ret=await worker.recognize(atlas,{}, {text:false,tsv:true}),words=parseTsvWords(ret.data?.tsv);
-    for(const w of words){if(w.width>tile*.78||w.height>tile*.78)continue;const col=Math.floor(w.cx/tile),row=Math.floor(w.cy/tile),j=row*cols+col;if(j<0||j>=part.length)continue;const num=normalizeNumberOcr(w.text);if(num==null)continue;const ci=part[j].cellIndex;if(!votes.has(ci))votes.set(ci,new Map());const m=votes.get(ci),old=m.get(num)||{sum:0,count:0,max:0};old.sum+=Math.max(1,w.conf);old.count++;old.max=Math.max(old.max,w.conf);m.set(num,old);rawReads++;}
-  }
-  let decided=0,high=0;for(const [ci,m] of votes){const rank=[...m.entries()].map(([num,v])=>({num,...v,avg:v.sum/Math.max(1,v.count),voteScore:v.sum+v.count*12})).sort((a,b)=>b.voteScore-a.voteScore),best=rank[0],second=rank[1];if(!best)continue;const margin=best.voteScore-(second?.voteScore||0);if(best.max>=45&&(margin>=15||best.count>=2&&!second)){const c=structure.cells[ci];c.ocrNum=best.num;c.ocrConf=Math.min(99,Math.max(c.ocrConf||0,best.avg));decided++;if(c.ocrConf>=82)high++;}}
-  return {targets:cells.length,items:items.length,rawReads,decided,high};
-}
-function choosePathByEvidence(structure,pathA,pathB,expectedNums,label,shape){
-  const evA=numberPathEvidence(structure,pathA,expectedNums),evB=numberPathEvidence(structure,pathB,expectedNums),margin=Math.abs(evA.score-evB.score),winner=evA.score>=evB.score?{path:pathA,ev:evA,name:'forward'}:{path:pathB,ev:evB,name:'reverse'},loser=winner.ev===evA?evB:evA;
-  if(winner.ev.reads>=2&&margin>=5&&winner.ev.match>=1&&winner.ev.mismatch<=Math.max(2,winner.ev.match+1))return {path:winner.path,reason:`multi-ocr-${winner.name}`,ocr:winner.ev,margin};
-  if(winner.ev.reads>=4&&winner.ev.score>0&&winner.ev.score-loser.score>=2)return {path:winner.path,reason:`multi-ocr-weak-${winner.name}`,ocr:winner.ev,margin};
-  const m0=cellInkMass(structure,structure.cells[pathA[0]]),m1=cellInkMass(structure,structure.cells[pathA[pathA.length-1]]);
-  if(evA.reads+evB.reads===0&&Math.min(m0,m1)>0&&Math.max(m0,m1)/Math.min(m0,m1)>=2.15){const path=m0<m1?pathA:pathB;return {path,reason:'ink-last-resort',ocr:path===pathA?evA:evB,margin:0,mass:[m0,m1]};}
-  throw new Error(`${label}（${shape}）の番号方向を自動判定できませんでした。複数アンカーOCRの根拠が不足または拮抗しています。`);
-}
-function chooseIslandNumberPath(structure,topology,island,expectedNums){
-  const lanes=[...island.lanes].sort((a,b)=>a.mean-b.mean),a=laneCellIndices(structure,lanes[0],topology.dominant),b=laneCellIndices(structure,lanes[1],topology.dominant);if(a.length+b.length!==island.cellCount||Math.abs(a.length-b.length)>1)throw new Error(`${island.letter}の対向列セル数が不整合です。`);
-  return choosePathByEvidence(structure,[...a,...[...b].reverse()],[...b,...[...a].reverse()],expectedNums,island.letter,'対向列型');
-}
-function chooseWallNumberPath(structure,group,expectedNums){return choosePathByEvidence(structure,group.cellIndices,[...group.cellIndices].reverse(),expectedNums,group.letter,'外周型');}
-function buildSpotsFromTopology(structure,topology,model,expectedSpaces,sourceW,sourceH){
-  const expectedSet=new Set(expectedSpaces),spots=[],paths=[],highStats={match:0,mismatch:0,total:0};
-  function addGroup(letter,path,kind,reason,ocr,margin){const nums=[...model.byLetter.get(letter)].sort((a,b)=>a-b),digits=model.digitsByLetter.get(letter)||2;if(path.length!==nums.length)throw new Error(`${letter}のセル数が公式一覧と一致しません。`);for(let i=0;i<path.length;i++){const num=nums[i],space=`${letter}-${String(num).padStart(digits,'0')}`,c=structure.cells[path[i]];if(!expectedSet.has(space))throw new Error(`公式一覧にない配置 ${space} が生成されました。`);if(c.ocrNum!=null&&c.ocrConf>=82){highStats.total++;if(c.ocrNum===num)highStats.match++;else highStats.mismatch++;}spots.push({space,viewId:'all',x:c.x/sourceW,y:c.y/sourceH,w:c.w/sourceW,h:c.h/sourceH});}paths.push({letter,kind,cells:path.length,reason,ocrReads:ocr?.reads||0,ocrMatch:ocr?.match||0,ocrMismatch:ocr?.mismatch||0,scoreMargin:Number((margin||0).toFixed(2))});}
-  for(const g of topology.islands){const nums=[...model.byLetter.get(g.letter)].sort((a,b)=>a-b),chosen=chooseIslandNumberPath(structure,topology,g,nums);addGroup(g.letter,chosen.path,'paired',chosen.reason,chosen.ocr,chosen.margin);g.numberReason=chosen.reason;}
-  for(const g of topology.wallGroups||[]){const nums=[...model.byLetter.get(g.letter)].sort((a,b)=>a-b),chosen=chooseWallNumberPath(structure,g,nums);addGroup(g.letter,chosen.path,'perimeter',chosen.reason,chosen.ocr,chosen.margin);g.numberReason=chosen.reason;}
-  const uniq=new Set(spots.map(s=>s.space));if(spots.length!==expectedSpaces.length||uniq.size!==expectedSpaces.length)throw new Error(`最終配置の重複または不足を検出しました（${uniq.size}/${expectedSpaces.length}）。`);for(const sp of expectedSpaces)if(!uniq.has(sp))throw new Error(`最終配置に ${sp} がありません。`);return {spots,paths,highStats};
-}
-async function autoAnalyzeMapImage(eventId,file){
-  const ev=events.find(e=>e.id===eventId),ec=eventCirclesFor(eventId),expected=[...new Set(ec.map(c=>parseKemoketSpace(c.space)?.canonical).filter(Boolean))],model=expectedSpaceModel(expected);if(!expected.length){alert('先にこのイベントの「公式リスト同期」を行ってください。\n同期済みの配置番号を正解候補として画像解析します。');return;}if(!file||!(/^image\/(?:jpeg|png|webp)$/i.test(file.type)||/\.(?:jpe?g|png|webp)$/i.test(file.name))){alert('会場全体図のJPG / PNG / WebPを1枚選択してください。');return;}
-  if(!confirm(`選択した1枚を「会場全体図」として、この端末内で自動解析します。\n\n・同期済み配置：${expected.length}件 / ${model.letters.length}グループ\n・A/B/Cなど特定の文字を「壁」「島」と決めつけません\n・解析時だけ画像解像度を正規化します（表示用画像は元画質のまま）\n・番号枠をCanvasで検出し、位置関係から配置セル群を分類します\n・ラベルOCRと公式一覧のグループ別件数を全体照合します\n・番号方向は経路上の複数地点を3種類の画像処理でOCRして採点します\n・根拠が拮抗した場合は推測保存せず安全停止します\n・左右半分などの補助図は使用しません\n・画像自体は外部AIへ送信しません\n\n開始しますか？`))return;
-  let worker=null;try{
-    setMapOcrProgress('会場全体図を準備しています…',.02);const [src,originalSource]=await Promise.all([readFileDataURL(file),fileToCanvas(file)]);const normalized=normalizeMapAnalysisCanvas(originalSource),source=normalized.canvas;await new Promise(r=>setTimeout(r,30));
-    setMapOcrProgress(`解析解像度を正規化しました（${normalized.inputWidth}×${normalized.inputHeight} → ${normalized.analysisWidth}×${normalized.analysisHeight}）`,.06);await new Promise(r=>setTimeout(r,35));
-    setMapOcrProgress('番号枠をCanvasで構造解析しています…',.09);const structure=detectCanvasStructure(source,expected.length);await new Promise(r=>setTimeout(r,20));
-    setMapOcrProgress('配置セル群の形状を分類しています…',.20);const topology=topologyFromStructure(structure,model);const perimeterCells=topology.perimeterCells,pairedCells=topology.interiorCells;
-    setMapOcrProgress('OCRエンジンを準備しています…',.25);worker=await createMapOcrWorker();mapOcrWorker=worker;
-    const labelStats=await recognizeIslandLabels(worker,source,structure,topology,model);setMapOcrProgress('外周型グループの境界を解析しています…',.47);const perimeterStats=solveWallGroups(structure,topology,model);
-    setMapOcrProgress('番号経路のアンカー候補を準備しています…',.54);const anchorStats=await recognizeGroupPathAnchors(worker,source,structure,topology);
-    setMapOcrProgress('番号の向きを全体採点して配置IDを生成しています…',.80);const built=buildSpotsFromTopology(structure,topology,model,expected,source.width,source.height),hs=built.highStats;
-    if(hs.total>=12&&hs.mismatch/hs.total>.12)throw new Error(`高信頼OCRとの不一致が多いため保存を中止しました（${hs.mismatch}/${hs.total}件）。`);
-    const allGroupLetters=[...topology.islandLetters,...topology.wallLetters],groupSet=new Set(allGroupLetters);if(groupSet.size!==model.letters.length||model.letters.some(l=>!groupSet.has(l)))throw new Error('公式一覧の配置グループを一対一で割り当てられていません。');
-    const analysis={method:'local-canvas-topology-v6-generic-groups',sourceMode:'single-overview-image',expectedSpaces:expected.length,expectedGroups:model.letters.length,inputWidth:normalized.inputWidth,inputHeight:normalized.inputHeight,analysisWidth:normalized.analysisWidth,analysisHeight:normalized.analysisHeight,analysisScale:Number(normalized.scale.toFixed(6)),threshold:structure.threshold,connectedComponents:structure.components.length,geometryRectangles:structure.rawRectangles,geometryStrips:structure.strips.length,geometryCells:structure.geometryCells,estimatedCellPitch:Number(structure.pitch.toFixed(3)),perimeterCells,pairedCells,perimeterStripCount:topology.perimeterStripIndices.length,innerStripCount:topology.innerStripIndices.length,pairedGroups:topology.islands.length,pairedGroupLabels:topology.islandLetters,perimeterGroupLabels:topology.wallLetters,labelReads:labelStats.reads,strongLabelReads:labelStats.strong,labelMatches:labelStats.matches,labelMismatches:labelStats.mismatches,labelSequenceScore:Number((labelStats.score||0).toFixed(2)),labelSequenceMargin:labelStats.margin==null?null:Number(labelStats.margin.toFixed(2)),perimeterBoundaryScore:Number((perimeterStats.score||0).toFixed(2)),perimeterBoundaryMargin:perimeterStats.margin==null?null:Number(perimeterStats.margin.toFixed(2)),pathAnchorTargets:anchorStats.targets,pathAnchorVariants:anchorStats.items,pathAnchorRawReads:anchorStats.rawReads,pathAnchorDecided:anchorStats.decided,pathAnchorHighConfidence:anchorStats.high,numberHighConfidenceMatches:hs.match,numberHighConfidenceMismatches:hs.mismatch,matchedUnique:built.spots.length,spotCount:built.spots.length,missingSpaces:[],paths:built.paths,groups:[...topology.islands.map(g=>({shape:'paired',label:g.letter,cells:g.cellCount,labelRead:g.labelRead||'',labelConf:Math.round(g.labelConf||0)})),...(topology.wallGroups||[]).map(g=>({shape:'perimeter',label:g.letter,cells:g.cellIndices.length,boundaryGap:Number(g.boundaryGap.toFixed(2))}))]};
-    const profile={schema:MAP_SCHEMA,eventId,eventName:ev?.name||eventId,generatedAt:new Date().toISOString(),views:[{id:'all',label:'全体',src,width:normalized.inputWidth,height:normalized.inputHeight}],spots:built.spots,analysis};setMapOcrProgress('解析結果を保存しています…',.96);saveMapProfileFor(eventId,profile);if(eventId===currentEventId){mapProfile=profile;mapViewId='all';mapZoom=1;}renderEventPage();
-    alert(`端末内マップ解析が完了しました。\n\n会場図：1枚（全体図）\n解析解像度：${normalized.inputWidth}×${normalized.inputHeight} → ${normalized.analysisWidth}×${normalized.analysisHeight}\n構造検出：${structure.geometryCells}/${expected.length}配置（${structure.strips.length}番号枠）\n配置グループ：${model.letters.length}/${model.letters.length}\n対向列型：${pairedCells}配置 / ${topology.islands.length}群${topology.islandLetters.length?` / ${topology.islandLetters.join('・')}`:''}\n外周型：${perimeterCells}配置 / ${topology.wallGroups.length}群${topology.wallLetters.length?` / ${topology.wallLetters.join('・')}`:''}\nラベルOCR：${labelStats.reads}件（強信頼 ${labelStats.strong}件）\n番号アンカー：${anchorStats.decided}/${anchorStats.targets}地点を確定\n高信頼OCR照合：${hs.match}/${hs.total}一致${hs.mismatch?`（不一致 ${hs.mismatch}）`:''}\n最終対応：${built.spots.length}/${expected.length}件（100%）\n\n会場マップ画面で位置とサークル名を確認してください。`);
-  }catch(e){console.error(e);alert(`マップの自動解析に失敗しました。\n${e?.message||e}\n\n誤ったmap.jsonは保存していません。元のマップ定義がある場合も上書きしていません。`);}finally{try{await worker?.terminate();}catch(_){}mapOcrWorker=null;closeMapOcrProgress();}
-}
-function chooseMapImageForAutoAnalysis(eventId){const input=document.createElement('input');input.type='file';input.accept='image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';input.multiple=false;input.onchange=()=>input.files?.[0]&&autoAnalyzeMapImage(eventId,input.files[0]);input.click();}
-
-function exportMapProfile(eventId){const mp=loadMapProfileFor(eventId);if(!mp)return;const ev=events.find(e=>e.id===eventId);const blob=new Blob([JSON.stringify(mp,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${String(ev?.name||eventId).replace(/[\\/:*?\"<>|]/g,'_')}_map.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
-
-function deleteMapProfile(eventId){const ev=events.find(e=>e.id===eventId);const mp=loadMapProfileFor(eventId);if(!mp)return;if(!confirm(`「${ev?.name||eventId}」のマップ定義を削除しますか？\nサークル一覧や色・メモ等は削除しません。`))return;saveMapProfileFor(eventId,null);if(eventId===currentEventId){mapProfile=null;mapViewId='';mapZoom=1;}renderEventPage();}
-
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener('DOMContentLoaded',async()=>{
   load();
+  await loadBundledMaps();
+  mapProfile=loadMapProfileFor(currentEventId);mapViewId=mapProfile?.views?.[0]?.id||'';mapZoom=1;
   document.getElementById('mapBtn').onclick=()=>{showPage('map');renderMapPage();};
   document.getElementById('backFromMapBtn').onclick=()=>showPage('catalog');
-  document.getElementById('autoMapEmptyBtn').onclick=()=>chooseMapImageForAutoAnalysis(currentEventId);
-  document.getElementById('openMapSettingsBtn').onclick=()=>{showPage('events');renderEventPage();};
   document.getElementById('mapZoomOutBtn').onclick=()=>setMapZoom(mapZoom-.25);
   document.getElementById('mapZoomInBtn').onclick=()=>setMapZoom(mapZoom+.25);
   document.getElementById('mapZoomFitBtn').onclick=fitMapToViewer;
@@ -1005,7 +755,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('mapStage').addEventListener('keydown',e=>{const r=e.target.closest('[data-map-spot]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openMapSpot(r.dataset.mapSpot);}});
   document.getElementById('eventSelect').addEventListener('change',e=>switchEvent(e.target.value));
   document.getElementById('manageEventsBtn').onclick=()=>{showPage('events');renderEventPage();};document.getElementById('backFromEventsBtn').onclick=()=>showPage('catalog');document.getElementById('addEventBtn').onclick=addEvent;
-  document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);if(e.target.closest('[data-event-action="mapAuto"]'))chooseMapImageForAutoAnalysis(id);if(e.target.closest('[data-event-action="mapImport"]'))chooseMapProfileFile(id);if(e.target.closest('[data-event-action="mapExport"]'))exportMapProfile(id);if(e.target.closest('[data-event-action="mapDelete"]'))deleteMapProfile(id);});
+  document.getElementById('eventList').addEventListener('click',e=>{const item=e.target.closest('[data-event-id]');if(!item)return;const id=item.dataset.eventId;if(e.target.closest('[data-event-action="rename"]'))renameEvent(id);if(e.target.closest('[data-event-action="delete"]'))deleteEvent(id);});
   bindPref('q','q','input');bindPref('viewMode','viewMode');bindPref('reviewFilter','reviewFilter');bindPref('checklistSort','checklistSort');
   document.getElementById('detailDefaultOpen').addEventListener('change',e=>{prefs.detailDefaultOpen=e.target.checked;savePrefs();resetDetailSessionToDefault();renderAll();});
   document.getElementById('showReviewedCheck').addEventListener('change',e=>{prefs.showReviewedCheck=e.target.checked;if(!prefs.showReviewedCheck)prefs.reviewFilter='all';savePrefs();renderAll();});
