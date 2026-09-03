@@ -1,4 +1,4 @@
-const CACHE='kemoket-catalog-v12R14';
+const CACHE='kemoket-catalog-v12R15';
 const CORE=[
   './','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png',
   './map/index.json','./map/kemoket17.json','./map/kemoket17.jpg'
